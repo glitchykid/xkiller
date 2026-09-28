@@ -19,7 +19,7 @@
     });
   });
   let line = $derived(ema.map((v, i) => `${left + (i + 0.5) * step},${y(v)}`).join(' '));
-  let maxVolume = $derived(Math.max(...candles.map((c) => c.volume)));
+  let maxVolume = $derived(Math.max(1, ...candles.map((c) => c.volume)));
 </script>
 
 <div class="price-chart">
@@ -29,7 +29,7 @@
       ><span>O <b>{money(c.open)}</b></span><span>H <b>{money(c.high)}</b></span><span
         >L <b>{money(c.low)}</b></span
       ><span>C <b>{money(c.close)}</b></span>{:else}<span
-        ><i class="legend-dot violet"></i> EMA 26</span
+        ><i class="legend-dot accent"></i> EMA 26</span
       ><span>Наведите на свечу для деталей</span>{/if}
   </div>
   <svg viewBox="0 0 910 360" role="img" aria-label="Свечной график ETH с EMA 26 и объёмом">
@@ -41,7 +41,7 @@
         class="grid-line"
       /><text x="836" y={y(value) + 4} class="axis">{money(value)}</text>{/each}
     {#each candles as c, i}{@const x = left + (i + 0.5) * step}{@const color =
-        c.close >= c.open ? '#88d7b0' : '#d6778e'}
+        c.close >= c.open ? 'var(--positive)' : 'var(--negative)'}
       <line x1={x} x2={x} y1={y(c.high)} y2={y(c.low)} stroke={color} />
       <rect
         x={x - step * 0.3}
@@ -49,7 +49,6 @@
         width={step * 0.6}
         height={Math.max(1, Math.abs(y(c.open) - y(c.close)))}
         fill={color}
-        rx=".7"
       />
       <rect
         x={x - step * 0.3}
@@ -70,13 +69,19 @@
         onpointerleave={() => (selected = null)}
       />
     {/each}
-    <polyline points={line} fill="none" stroke="#b2a0ff" stroke-width="1.7" pointer-events="none" />
+    <polyline
+      points={line}
+      fill="none"
+      stroke="var(--chart-line)"
+      stroke-width="1.7"
+      pointer-events="none"
+    />
     {#if selected !== null}<line
         x1={left + (selected + 0.5) * step}
         x2={left + (selected + 0.5) * step}
         y1="10"
         y2="327"
-        stroke="#81818e"
+        stroke="var(--muted)"
         stroke-dasharray="3 4"
         pointer-events="none"
       />{/if}

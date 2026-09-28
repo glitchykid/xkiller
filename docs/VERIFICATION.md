@@ -29,9 +29,19 @@ Verified locally on Windows x64 on 2026-09-28. This record describes functional 
 
 - A second client regression check verifies that filesystem aliases resolve to the same trusted packaged document, while other archives, other documents, remote URLs, and modified URLs are rejected. This addresses Windows portable extraction paths without weakening sender checks.
 
-Run `npm run test` for all 19 checks. These are meaningful invariants and demonstrated integration regressions; no claim of exhaustive correctness is made.
+Two additional client checks cover theme persistence, invalid preference files and writes, preservation of research files, system/browser/native preference precedence, blocked browser storage, and failed native writes. Run `npm run test` for all 21 checks. These are meaningful invariants and demonstrated integration regressions; no claim of exhaustive correctness is made.
 
 ## UI and integration
+
+### Version 0.2.0 appearance update
+
+All six sections were inspected with the new brutalist styling. Light/dark switching, selected theme button states, theme restoration after browser reload, chart palettes, numeric form validity, and responsive layouts were checked. The simulation at 1024 px and methodology at 760 px had no page-level horizontal overflow. Native Electron IPC returned the same selected theme as the renderer, wrote a separate `preferences.json`, and kept renderer Node access disabled. A simulation executed through the packaged UI completed with 14 trades and added a third run to an isolated copy of the existing research workspace, with no UI alerts or runtime errors.
+
+The toolchain was verified against stable/LTS releases on 2026-09-28. TypeScript 7.0.2 checks Electron; Svelte Check 4.7.6 uses its supported TypeScript 6.0.3 API. All 21 automated checks passed, with zero Svelte/TypeScript diagnostics. The Windows package bundles Electron 44.4.5 and .NET 10.0.12.
+
+The final portable EXE was launched from its actual temporary extraction directory. It restored the light preference and three research runs from the previous unpacked launch, then successfully saved dark mode through trusted IPC. Renderer Node access remained disabled and no alerts were present. The generated SHA-256 matched an independent file hash. The executable is unsigned. Main, muted, positive, and negative text tokens on panel backgrounds all exceeded 6.3:1 contrast in both themes; this is a targeted color check, not a full accessibility audit.
+
+### Initial research workflow verification
 
 Checked with an actual Chromium browser: initial synthetic labeling, overview, timeframe controls, data import, training, simulation, equity chart, trade journal, long-only filtering, and full CSV/JSON export payloads. No browser runtime errors were reported. A 760-pixel browser viewport did not overflow horizontally.
 

@@ -1,6 +1,8 @@
 <script lang="ts">
   let { name, size = 20 }: { name: string; size?: number } = $props();
   const paths: Record<string, string> = {
+    sun: 'M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8 M12 2v2 M12 20v2 M2 12h2 M20 12h2 M5 5l1.5 1.5 M17.5 17.5L19 19 M5 19l1.5-1.5 M17.5 6.5L19 5',
+    moon: 'M20.5 14A9 9 0 0 1 10 3.5 9 9 0 1 0 20.5 14z',
     grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
     brain:
       'M9 18H7a4 4 0 0 1-3-7 4 4 0 0 1 5-6 3 3 0 0 1 6 0 4 4 0 0 1 5 6 4 4 0 0 1-3 7h-2 M12 5v16 M8 9l4 3 4-3 M8 15l4 2 4-2',
@@ -30,7 +32,7 @@
   fill="none"
   stroke="currentColor"
   stroke-width="1.6"
-  stroke-linecap="round"
-  stroke-linejoin="round"
+  stroke-linecap="square"
+  stroke-linejoin="miter"
   aria-hidden="true"><path d={paths[name] || paths.chart} /></svg
 >

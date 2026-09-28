@@ -1,6 +1,6 @@
 {
   "name": "xkiller",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "ETH perpetual futures learning and simulation lab",
   "author": "glitchykid",
@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "dev:web": "node scripts/dev.mjs --web",
-    "check": "svelte-check --tsconfig ./tsconfig.json && tsc -p tsconfig.electron.json --noEmit",
+    "check": "svelte-check --tsconfig ./tsconfig.json && node node_modules/typescript-native/bin/tsc -p tsconfig.electron.json --noEmit",
     "build:ui": "vite build && node scripts/build-electron.mjs",
     "build": "npm run check && npm run build:ui && dotnet build backend/Xkiller.Api -c Release",
     "test:client": "node --test tests/client.test.mjs",
@@ -18,16 +18,17 @@
   },
   "devDependencies": {
     "@sveltejs/vite-plugin-svelte": "7.3.1",
-    "@types/node": "^24.0.0",
+    "@types/node": "24.19.0",
     "electron": "44.4.5",
     "electron-builder": "26.15.3",
-    "esbuild": "^0.27.0",
-    "prettier": "^3.9.9",
-    "prettier-plugin-svelte": "^4.1.1",
+    "esbuild": "0.28.2",
+    "prettier": "3.9.9",
+    "prettier-plugin-svelte": "4.1.1",
     "svelte": "5.57.1",
-    "svelte-check": "^4.3.0",
-    "typescript": "^5.9.0",
-    "vite": "8.3.1"
+    "svelte-check": "4.7.6",
+    "typescript": "6.0.3",
+    "vite": "8.3.1",
+    "typescript-native": "npm:typescript@7.0.2"
   },
   "build": {
     "appId": "com.glitchykid.xkiller",
@@ -53,5 +54,8 @@
       "signAndEditExecutable": false
     },
     "artifactName": "Xkiller-${version}-${arch}.${ext}"
+  },
+  "engines": {
+    "node": ">=24.21.0 <25"
   }
 }

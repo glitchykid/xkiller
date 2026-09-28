@@ -1,10 +1,11 @@
-import { app, BrowserWindow, ipcMain, dialog, session } from 'electron';
+import { app, BrowserWindow, ipcMain, dialog, session, nativeTheme } from 'electron';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { randomBytes } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
 import { isTrustedDocument } from './trust';
+import { readTheme, writeTheme } from './preferences';
 
 let backend: ChildProcess | undefined;
 let backendUrl = '';
@@ -96,7 +97,33 @@ else
         callback(false),
       );
       session.defaultSession.setPermissionCheckHandler(() => false);
+      const preferencesDirectory = app.getPath('userData');
+      let theme = await readTheme(
+        preferencesDirectory,
+        nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
+      );
+      nativeTheme.themeSource = theme;
       await startBackend();
+      ipcMain.handle('theme:get', (event) => {
+        trusted(event);
+        return theme;
+      });
+      let pendingTheme = Promise.resolve();
+      ipcMain.handle('theme:set', (event, value: unknown) => {
+        trusted(event);
+        const update = pendingTheme.then(async () => {
+          theme = await writeTheme(preferencesDirectory, value);
+          nativeTheme.themeSource = theme;
+          for (const window of BrowserWindow.getAllWindows())
+            window.setBackgroundColor(theme === 'dark' ? '#141611' : '#f4f3ed');
+          return theme;
+        });
+        pendingTheme = update.then(
+          () => {},
+          () => {},
+        );
+        return update;
+      });
       ipcMain.handle('lab:request', async (event, action: string, payload?: unknown) => {
         trusted(event);
         const route = Object.hasOwn(routes, action) ? routes[action] : undefined;
@@ -117,7 +144,7 @@ else
         height: 960,
         minWidth: 1024,
         minHeight: 720,
-        backgroundColor: '#101116',
+        backgroundColor: theme === 'dark' ? '#141611' : '#f4f3ed',
         title: 'Xkiller — ETH Research Lab',
         autoHideMenuBar: true,
         webPreferences: {

@@ -1,10 +1,26 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, untrack } from 'svelte';
   import Icon from './lib/Icon.svelte';
   import PriceChart from './lib/PriceChart.svelte';
   import LineChart from './lib/LineChart.svelte';
   import { request, exportFile, money, pct, date, time } from './lib/api';
   import type { State, RiskOptions, TrainingOptions } from './lib/types';
+  import { saveTheme, type Theme } from './lib/theme';
+  import { version } from '../package.json';
+  let { initialTheme }: { initialTheme: Theme } = $props();
+  let theme = $state(untrack(() => initialTheme));
+  let savingTheme = $state(false);
+  async function selectTheme(value: Theme) {
+    savingTheme = true;
+    try {
+      await saveTheme(value);
+      theme = value;
+    } catch {
+      notify('Не удалось сохранить тему. Попробуйте ещё раз.');
+    } finally {
+      savingTheme = false;
+    }
+  }
   type Page = 'overview' | 'training' | 'simulation' | 'journal' | 'data' | 'method';
   let page = $state<Page>('overview');
   let lab = $state<State | null>(null),
@@ -176,6 +192,7 @@
     <a
       href="#overview"
       class="brand"
+      aria-label="Xkiller — обзор рынка"
       onclick={(e) => {
         e.preventDefault();
         page = 'overview';
@@ -183,12 +200,14 @@
     >
     <div class="workspace-label">RESEARCH WORKSPACE <span>01</span></div>
     <nav aria-label="Основная навигация">
-      {#each navigation as item}<button
+      {#each navigation as item, index}<button
           class:active={page === item.id}
+          aria-label={item.label}
+          aria-current={page === item.id ? 'page' : undefined}
           onclick={() => (page = item.id)}
-          ><Icon name={item.icon} /><span>{item.label}</span>{#if item.id === 'training'}<small
-              >AI</small
-            >{/if}</button
+          ><span class="nav-number" aria-hidden="true">0{index + 1}</span><Icon
+            name={item.icon}
+          /><span>{item.label}</span></button
         >{/each}
     </nav>
     <div class="sidebar-bottom">
@@ -200,10 +219,14 @@
         </div>
         <span class="status-dot"></span>
       </div>
-      <button class="help-link" onclick={() => (page = 'method')}
+      <button
+        class="help-link"
+        aria-label="Как это работает"
+        aria-current={page === 'method' ? 'page' : undefined}
+        onclick={() => (page = 'method')}
         ><Icon name="info" size={17} /> Как это работает <span>↗</span></button
       >
-      <div class="version"><span>DESKTOP LAB</span><span>v0.1.0</span></div>
+      <div class="version"><span>DESKTOP LAB</span><span>v{version}</span></div>
     </div>
   </aside>
   <div class="workspace">
@@ -216,7 +239,23 @@
           ><i class:offline={!connected}></i>{connected ? 'Движок подключён' : 'Подключение…'}</span
         ><span class="separator"></span><span class="market-label"
           >BYBIT <span>ETH / USDT</span></span
-        ><span class="avatar">GK</span>
+        >
+        <div class="theme-switch" role="group" aria-label="Тема оформления">
+          <button
+            aria-label="Светлая тема"
+            aria-pressed={theme === 'light'}
+            disabled={savingTheme}
+            onclick={() => selectTheme('light')}
+            ><Icon name="sun" size={16} /><span>Светлая</span></button
+          >
+          <button
+            aria-label="Тёмная тема"
+            aria-pressed={theme === 'dark'}
+            disabled={savingTheme}
+            onclick={() => selectTheme('dark')}
+            ><Icon name="moon" size={16} /><span>Тёмная</span></button
+          >
+        </div>
       </div>
     </header>
     <main>
@@ -324,7 +363,7 @@
               <div class="stat-label">Решение модели <Icon name="brain" size={17} /></div>
               <div class="stat-value signal-value">{signal}</div>
               <div class="stat-footer">
-                {#if lab.model}<span class="violet-text">{confidence.toFixed(1)}%</span><span
+                {#if lab.model}<span class="accent-text">{confidence.toFixed(1)}%</span><span
                     >оценка вероятности</span
                   >{:else}<span class="muted">Ожидает первого обучения</span>{/if}
               </div>
@@ -369,6 +408,7 @@
                 <div class="segmented" aria-label="Таймфрейм">
                   {#each ['15m', '1h', '4h'] as tf}<button
                       class:selected={timeframe === tf}
+                      aria-pressed={timeframe === tf}
                       onclick={() => (timeframe = tf)}>{tf}</button
                     >{/each}
                 </div>
@@ -383,15 +423,11 @@
             <section class="panel intelligence">
               <div class="panel-heading">
                 <h2><Icon name="bolt" size={18} /> AI Insight</h2>
-                <span class="badge violet">24 FEATURES</span>
+                <span class="badge accent">24 FEATURES</span>
               </div>
-              <div class="intelligence-visual">
-                <div class="orbit one"></div>
-                <div class="orbit two"></div>
-                <div class="core-diamond"><Icon name="brain" size={38} /></div>
-                <span class="orbit-node n1"></span><span class="orbit-node n2"></span><span
-                  class="orbit-node n3"
-                ></span>
+              <div class="intelligence-visual" aria-hidden="true">
+                <strong>24<span>INPUTS</span></strong>
+                <div><span>15 MIN</span><span>01 HOUR</span><span>04 HOURS</span></div>
               </div>
               <h3>{lab.model ? 'Модель готова к проверке' : 'Рынок — это данные.'}</h3>
               <p>
@@ -403,7 +439,7 @@
                 <div><span>Алгоритм</span><strong>Softmax regression</strong></div>
                 <div><span>Признаки</span><strong>8 × 3 таймфрейма</strong></div>
                 <div>
-                  <span>Статус</span><strong class="violet-text"
+                  <span>Статус</span><strong class="accent-text"
                     >{lab.model ? 'Обучена' : 'Готов к обучению'}</strong
                   >
                 </div>
@@ -434,7 +470,7 @@
                 </div>
                 <div class="indicator">
                   <span>RSI <small>14</small></span><strong>{frame.rsi.toFixed(1)}</strong>
-                  <div class="rsi-track"><i style:left={`${frame.rsi}%`}></i></div>
+                  <div class="rsi-track"><i style:width={`${frame.rsi}%`}></i></div>
                 </div>
                 <div class="frame-bottom">
                   <div>
@@ -476,7 +512,7 @@
             <section class="panel">
               <div class="panel-heading">
                 <h2>Параметры обучения</h2>
-                <span class="badge violet">SUPERVISED ML</span>
+                <span class="badge accent">SUPERVISED ML</span>
               </div>
               <form
                 class="panel-body"
@@ -575,7 +611,7 @@
                     label="Ошибка обучения и валидации по эпохам"
                   />
                   <div class="chart-legend">
-                    <span><i class="legend-dot violet"></i> Обучение</span><span
+                    <span><i class="legend-dot accent"></i> Обучение</span><span
                       ><i class="legend-dot green"></i> Валидация</span
                     >
                   </div>
@@ -695,7 +731,7 @@
                     <div class="equity-value">${money(result.finalBalance)}<span>USDT</span></div>
                     <LineChart
                       values={result.equity.map((p) => p.equity)}
-                      color={result.returnPercent >= 0 ? '#91d5b4' : '#dd90a1'}
+                      color={result.returnPercent >= 0 ? 'var(--positive)' : 'var(--negative)'}
                     />
                     <div class="range-label">
                       <span>{date(result.equity[0].time)}</span><span
@@ -762,6 +798,7 @@
               <div class="segmented">
                 {#each [{ id: 'all', text: 'Все' }, { id: 'Long', text: 'Long' }, { id: 'Short', text: 'Short' }] as f}<button
                     class:selected={filter === f.id}
+                    aria-pressed={filter === f.id}
                     onclick={() => (filter = f.id)}>{f.text}</button
                   >{/each}
               </div>

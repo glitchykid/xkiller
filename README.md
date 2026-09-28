@@ -4,7 +4,19 @@ A local research lab for learning and testing ETHUSDT perpetual futures strategi
 
 Xkiller trains a real, reproducible classifier on technical indicators, then simulates its decisions on a later section of history. It is a research application, not a proven profitable trading system. **No exchange credentials or real order submission are implemented.**
 
-![Xkiller overview with imported Bybit data and an explicitly measured research result](docs/images/overview.png)
+![Xkiller dark brutalist workspace with imported Bybit data](docs/images/overview.png)
+
+![Xkiller light brutalist workspace with the same research data](docs/images/overview-light.png)
+
+## Download
+
+Download the Windows x64 portable executable from [GitHub Releases](https://github.com/glitchykid/xkiller/releases/latest). It bundles Electron and the .NET runtime. Release assets include a SHA-256 checksum. Builds are currently unsigned.
+
+## Appearance
+
+Every screen supports **light and dark themes** through the controls in the top bar. The first desktop launch follows the system appearance. Selecting a theme saves it for future launches, including portable extraction into a different temporary directory. The visual language uses square panels, hard borders, offset shadows, bold headings, numbered navigation, and an acid-lime accent. Charts, forms, tables, status messages, and native window appearance follow the chosen theme.
+
+The desktop preference is stored separately from research data. Browser development stores the theme in local storage. See the [design system](docs/DESIGN.md) for layout, accessibility, and implementation details.
 
 ## What works
 
@@ -19,7 +31,9 @@ Xkiller trains a real, reproducible classifier on technical indicators, then sim
 
 ## Run the desktop application
 
-Requirements for development: **Node.js 24**, **.NET SDK 10**, and Windows x64. Dependencies are pinned in `package-lock.json`. The Windows portable build bundles its own .NET runtime, so the end user does not need the SDK.
+Requirements for development: **Node.js 24.21.0 LTS**, **.NET SDK 10.0.401 LTS**, and Windows x64. `.nvmrc` and `global.json` record the verified toolchain. Dependencies are pinned in `package-lock.json`. The Windows portable build bundles its own .NET runtime, so the end user does not need the SDK.
+
+Verified stable dependencies: Electron 44.4.5, Svelte 5.57.1, Vite 8.3.1, and TypeScript 7.0.2. TypeScript 7 checks Electron and shared code through the `typescript-native` npm alias. Svelte Check 4.7.6 still requires the TypeScript 5/6 programmatic API, so TypeScript 6.0.3 is retained exclusively for that compatibility path. No peer dependency overrides or prerelease compilers are used.
 
 ```powershell
 npm ci
@@ -51,18 +65,21 @@ Loading a new dataset resets the current model and its simulations. Retraining r
 
 ```powershell
 npm run check        # Svelte + TypeScript diagnostics
-npm run test         # 17 C# checks + 2 Electron integration regression checks
+npm run test         # 17 C# checks + 4 client/Electron regression checks
 npm run build        # UI, Electron bridge, C# service
 npm run package      # Windows x64 portable application, including .NET runtime
 ```
 
-Output: `release/Xkiller-0.1.0-x64.exe`. This initial build is unsigned. `release/win-unpacked/Xkiller.exe` is the unpacked application. GitHub Actions performs checks and uploads the portable executable as a workflow artifact. CI execution requires Actions to be enabled on the repository.
+Output: `release/Xkiller-0.2.0-x64.exe`. This build is unsigned. `release/win-unpacked/Xkiller.exe` is the unpacked application. GitHub Actions performs checks and uploads the portable executable as a workflow artifact.
+
+To publish a new version, update `package.json` and its lockfile, add English notes at `docs/releases/<version>.md`, verify locally, commit, and push a matching `v<version>` tag. The release workflow validates the version, runs all tests and type checks, packages Windows x64, computes SHA-256, and publishes both assets using the repository's built-in `GITHUB_TOKEN`. No personal access token is required. Actions must be enabled and permitted to write releases.
 
 ## Data and state
 
 - Development: `.local/workspace/workspace.json`.
 - Packaged Electron: a `workspace` directory below Electron's `userData` location (normally `%APPDATA%\xkiller` or `%APPDATA%\Xkiller`).
 - `XKILLER_DATA` overrides the workspace directory for isolated verification.
+- Desktop appearance: `preferences.json` directly below Electron's `userData` directory. Theme writes are serialized and use atomic replacement. Missing or malformed appearance settings fall back to the system theme without touching research data.
 - The workspace contains market history, funding, model parameters, risk settings, and simulation runs. Writes use a temporary file and atomic replacement; malformed existing files are preserved and cause startup to fail rather than silently resetting research.
 - Nothing in `.local/`, `artifacts/`, `release/`, or dependency folders is committed.
 
