@@ -1,26 +1,15 @@
 <script lang="ts">
-  import { onMount, untrack } from 'svelte';
+  import { onMount } from 'svelte';
   import Icon from './lib/Icon.svelte';
   import PriceChart from './lib/PriceChart.svelte';
   import LineChart from './lib/LineChart.svelte';
-  import { request, exportFile, money, pct, date, time } from './lib/api';
+  import { request, exportFile } from './lib/api';
+  import { money, pct, date, time, number, integer } from './lib/format.svelte';
+  import { t, featureLabel } from './lib/i18n.svelte';
+  import AppearanceControls from './lib/AppearanceControls.svelte';
   import type { State, RiskOptions, TrainingOptions } from './lib/types';
-  import { saveTheme, type Theme } from './lib/theme';
   import { version } from '../package.json';
-  let { initialTheme }: { initialTheme: Theme } = $props();
-  let theme = $state(untrack(() => initialTheme));
-  let savingTheme = $state(false);
-  async function selectTheme(value: Theme) {
-    savingTheme = true;
-    try {
-      await saveTheme(value);
-      theme = value;
-    } catch {
-      notify('Не удалось сохранить тему. Попробуйте ещё раз.');
-    } finally {
-      savingTheme = false;
-    }
-  }
+  import researchArtwork from './assets/eth-research-glass.png';
   type Page = 'overview' | 'training' | 'simulation' | 'journal' | 'data' | 'method';
   let page = $state<Page>('overview');
   let lab = $state<State | null>(null),
@@ -59,66 +48,73 @@
   });
   let signal = $derived(
     lab?.prediction
-      ? ['SHORT', 'ОЖИДАНИЕ', 'LONG'][lab.prediction.indexOf(Math.max(...lab.prediction))]
-      : 'НЕ ОБУЧЕНА',
+      ? [t('Short'), t('ОЖИДАНИЕ'), t('Long')][lab.prediction.indexOf(Math.max(...lab.prediction))]
+      : t('НЕ ОБУЧЕНА'),
   );
   let confidence = $derived(lab?.prediction ? Math.max(...lab.prediction) * 100 : 0);
-  const navigation: { id: Page; icon: string; label: string }[] = [
-    { id: 'overview', icon: 'grid', label: 'Обзор рынка' },
-    { id: 'training', icon: 'brain', label: 'Обучение ИИ' },
-    { id: 'simulation', icon: 'chart', label: 'Симуляция' },
-    { id: 'journal', icon: 'list', label: 'Журнал сделок' },
-    { id: 'data', icon: 'database', label: 'Данные' },
-  ];
-  const titles: Record<Page, string> = {
-    overview: 'Обзор рынка',
-    training: 'Обучение ИИ',
-    simulation: 'Симуляция стратегии',
-    journal: 'Журнал сделок',
-    data: 'История рынка',
-    method: 'Как устроена лаборатория',
-  };
-  const riskFields: {
+  let navigation: { id: Page; icon: string; label: string }[] = $derived([
+    { id: 'overview', icon: 'grid', label: t('Обзор рынка') },
+    { id: 'training', icon: 'brain', label: t('Обучение ИИ') },
+    { id: 'simulation', icon: 'chart', label: t('Симуляция') },
+    { id: 'journal', icon: 'list', label: t('Журнал сделок') },
+    { id: 'data', icon: 'database', label: t('Данные') },
+  ]);
+  let titles: Record<Page, string> = $derived({
+    overview: t('Обзор рынка'),
+    training: t('Обучение ИИ'),
+    simulation: t('Симуляция стратегии'),
+    journal: t('Журнал сделок'),
+    data: t('История рынка'),
+    method: t('Как устроена лаборатория'),
+  });
+  let riskFields: {
     key: keyof RiskOptions;
     label: string;
     min: number;
     max: number;
     step: number;
     unit: string;
-  }[] = [
+  }[] = $derived([
     {
       key: 'initialBalance',
-      label: 'Стартовый капитал',
+      label: t('Стартовый капитал'),
       min: 100,
       max: 10000000,
       step: 100,
       unit: 'USDT',
     },
-    { key: 'leverage', label: 'Плечо', min: 1, max: 10, step: 1, unit: '×' },
-    { key: 'riskPercent', label: 'Риск на сделку', min: 0.1, max: 2, step: 0.1, unit: '%' },
-    { key: 'stopAtr', label: 'Стоп-лосс', min: 1, max: 5, step: 0.1, unit: 'ATR' },
-    { key: 'rewardRisk', label: 'Прибыль / риск', min: 1, max: 5, step: 0.1, unit: ': 1' },
+    { key: 'leverage', label: t('Плечо'), min: 1, max: 10, step: 1, unit: '×' },
+    { key: 'riskPercent', label: t('Риск на сделку'), min: 0.1, max: 2, step: 0.1, unit: '%' },
+    { key: 'stopAtr', label: t('Стоп-лосс'), min: 1, max: 5, step: 0.1, unit: 'ATR' },
+    { key: 'rewardRisk', label: t('Прибыль / риск'), min: 1, max: 5, step: 0.1, unit: ': 1' },
     {
       key: 'confidence',
-      label: 'Порог вероятности',
+      label: t('Порог вероятности'),
       min: 0.34,
       max: 0.95,
       step: 0.01,
       unit: '0–1',
     },
-    { key: 'feeBps', label: 'Комиссия за сторону', min: 0, max: 100, step: 0.1, unit: 'bps' },
-    { key: 'slippageBps', label: 'Проскальзывание', min: 0, max: 100, step: 0.5, unit: 'bps' },
-    { key: 'maxDrawdownPercent', label: 'Лимит просадки', min: 1, max: 50, step: 1, unit: '%' },
-    { key: 'maxHoldBars', label: 'Максимум в позиции', min: 1, max: 96, step: 1, unit: 'свечей' },
+    { key: 'feeBps', label: t('Комиссия за сторону'), min: 0, max: 100, step: 0.1, unit: 'bps' },
+    { key: 'slippageBps', label: t('Проскальзывание'), min: 0, max: 100, step: 0.5, unit: 'bps' },
+    { key: 'maxDrawdownPercent', label: t('Лимит просадки'), min: 1, max: 50, step: 1, unit: '%' },
+    {
+      key: 'maxHoldBars',
+      label: t('Максимум в позиции'),
+      min: 1,
+      max: 96,
+      step: 1,
+      unit: t('свечей'),
+    },
     {
       key: 'maintenancePercent',
-      label: 'Поддерживающая маржа',
+      label: t('Поддерживающая маржа'),
       min: 0.1,
       max: 5,
       step: 0.1,
       unit: '%',
     },
-  ];
+  ]);
   let initialized = false,
     previousJob = '',
     toastTimer: ReturnType<typeof setTimeout>;
@@ -139,9 +135,9 @@
       }
       const jobKey = next.job ? next.job.id + next.job.status : '';
       if (previousJob && jobKey !== previousJob && next.job?.status === 'completed')
-        notify('Готово. Результат сохранён.');
+        notify(t('Готово. Результат сохранён.'));
       if (next.job?.status === 'failed' && jobKey !== previousJob)
-        error = next.job.error || 'Операция не завершена';
+        error = next.job.error || t('Операция не завершена');
       previousJob = jobKey;
     } catch (e) {
       connected = false;
@@ -176,7 +172,7 @@
   }
   async function save(kind: string) {
     try {
-      if (await exportFile(kind)) notify('Файл экспортирован');
+      if (await exportFile(kind)) notify(t('Файл экспортирован'));
     } catch (e) {
       error = String(e);
     }
@@ -186,20 +182,23 @@
   );
 </script>
 
-<svelte:head><title>Xkiller · {titles[page]}</title></svelte:head>
+<svelte:head><title>{t('Xkiller ·')} {titles[page]}</title></svelte:head>
 <div class="app-shell">
   <aside class="sidebar">
     <a
       href="#overview"
       class="brand"
-      aria-label="Xkiller — обзор рынка"
+      aria-label={t('Xkiller — обзор рынка')}
       onclick={(e) => {
         e.preventDefault();
         page = 'overview';
-      }}><span class="brand-mark">x</span><span>xkiller<span class="brand-period">.</span></span></a
+      }}
+      ><img class="brand-mark" src="./icon.png" alt="" width="42" height="42" /><span
+        >{t('xkiller')}<span class="brand-period">.</span></span
+      ></a
     >
-    <div class="workspace-label">RESEARCH WORKSPACE <span>01</span></div>
-    <nav aria-label="Основная навигация">
+    <div class="workspace-label">{t('RESEARCH WORKSPACE')} <span>01</span></div>
+    <nav aria-label={t('Основная навигация')}>
       {#each navigation as item, index}<button
           class:active={page === item.id}
           aria-label={item.label}
@@ -214,123 +213,114 @@
       <div class="mode-card">
         <span class="mode-icon"><Icon name="shield" size={18} /></span>
         <div>
-          <strong>Режим исследования</strong>
-          <p>Обучение и симуляция</p>
+          <strong>{t('Режим исследования')}</strong>
+          <p>{t('Обучение и симуляция')}</p>
         </div>
         <span class="status-dot"></span>
       </div>
       <button
         class="help-link"
-        aria-label="Как это работает"
+        aria-label={t('Как это работает')}
         aria-current={page === 'method' ? 'page' : undefined}
         onclick={() => (page = 'method')}
-        ><Icon name="info" size={17} /> Как это работает <span>↗</span></button
+        ><Icon name="info" size={17} /> {t('Как это работает')} <span>↗</span></button
       >
-      <div class="version"><span>DESKTOP LAB</span><span>v{version}</span></div>
+      <div class="version"><span>{t('DESKTOP LAB')}</span><span>v{version}</span></div>
     </div>
   </aside>
   <div class="workspace">
     <header class="topbar">
       <div class="breadcrumb">
-        Рабочее пространство <span>/</span> <strong>{titles[page]}</strong>
+        {t('Рабочее пространство')} <span>/</span> <strong>{titles[page]}</strong>
       </div>
       <div class="topbar-right">
         <span class="connection"
-          ><i class:offline={!connected}></i>{connected ? 'Движок подключён' : 'Подключение…'}</span
+          ><i class:offline={!connected}></i>{connected
+            ? t('Движок подключён')
+            : t('Подключение…')}</span
         ><span class="separator"></span><span class="market-label"
-          >BYBIT <span>ETH / USDT</span></span
+          >{t('BYBIT')} <span>{t('ETH / USDT')}</span></span
         >
-        <div class="theme-switch" role="group" aria-label="Тема оформления">
-          <button
-            aria-label="Светлая тема"
-            aria-pressed={theme === 'light'}
-            disabled={savingTheme}
-            onclick={() => selectTheme('light')}
-            ><Icon name="sun" size={16} /><span>Светлая</span></button
-          >
-          <button
-            aria-label="Тёмная тема"
-            aria-pressed={theme === 'dark'}
-            disabled={savingTheme}
-            onclick={() => selectTheme('dark')}
-            ><Icon name="moon" size={16} /><span>Тёмная</span></button
-          >
-        </div>
+        <AppearanceControls onerror={notify} />
       </div>
     </header>
     <main>
       {#if error}<div class="alert error" role="alert">
-          <Icon name="info" /><span>{error}</span><button
+          <Icon name="info" /><span>{t(error)}</span><button
             class="icon-button"
-            aria-label="Закрыть ошибку"
+            aria-label={t('Закрыть ошибку')}
             onclick={() => (error = '')}><Icon name="close" size={16} /></button
           >
         </div>{/if}
       {#if !connected && lab}<div class="alert error">
-          Связь с движком потеряна. Показаны последние полученные данные.
+          {t('Связь с движком потеряна. Показаны последние полученные данные.')}
         </div>{/if}
       {#if !lab}<div class="loading">
           <span class="loader"></span>
-          <h2>Запускаем лабораторию</h2>
-          <p>C# engine · локальная рабочая область</p>
-          <button class="secondary" onclick={refresh}>Повторить подключение</button>
+          <h2>{t('Запускаем лабораторию')}</h2>
+          <p>{t('C# engine · локальная рабочая область')}</p>
+          <button class="secondary" onclick={refresh}>{t('Повторить подключение')}</button>
         </div>
       {:else}
         <section class="page-heading">
           <div>
             <div class="eyebrow">
-              ETHEREUM RESEARCH LAB <span class="tiny-line"></span>
-              {page === 'overview' ? 'MULTI-TIMEFRAME' : 'BYBIT PERPETUALS'}
+              {t('ETHEREUM RESEARCH LAB')} <span class="tiny-line"></span>
+              {page === 'overview' ? t('MULTI-TIMEFRAME') : t('BYBIT PERPETUALS')}
             </div>
             <h1>{titles[page]}<span class="title-dot">.</span></h1>
             <p>
               {page === 'overview'
-                ? 'От рыночных данных — к проверяемой стратегии.'
+                ? t('От рыночных данных — к проверяемой стратегии.')
                 : page === 'training'
-                  ? 'Обучайте модель. Сравнивайте с базовой стратегией.'
+                  ? t('Обучайте модель. Сравнивайте с базовой стратегией.')
                   : page === 'simulation'
-                    ? 'Проверьте решения модели на отложенном участке истории.'
+                    ? t('Проверьте решения модели на отложенном участке истории.')
                     : page === 'journal'
-                      ? 'Каждое решение, исполнение и результат — в одном месте.'
+                      ? t('Каждое решение, исполнение и результат — в одном месте.')
                       : page === 'data'
-                        ? 'Закрытые свечи и история funding из публичного API Bybit.'
-                        : 'Прозрачные допущения, воспроизводимые результаты.'}
+                        ? t('Закрытые свечи и история funding из публичного API Bybit.')
+                        : t('Прозрачные допущения, воспроизводимые результаты.')}
             </p>
           </div>
           <div class="heading-actions">
-            <span class="badge neutral"><i></i> PAPER ONLY</span>{#if page === 'overview'}<button
+            <span class="badge neutral"><i></i> {t('PAPER ONLY')}</span
+            >{#if page === 'overview'}<button
                 class="primary"
                 disabled={busy || !connected}
                 onclick={() => {
                   page = 'training';
                 }}
-                ><Icon name="brain" size={17} /> Обучить модель <Icon
-                  name="arrow"
-                  size={16}
-                /></button
+                ><Icon name="brain" size={17} />
+                {t('Обучить модель')}
+                <Icon name="arrow" size={16} /></button
               >{:else if page === 'journal'}<button
                 class="secondary"
                 disabled={!lab.result}
                 onclick={() => save('trades')}
-                ><Icon name="download" size={17} /> Экспорт CSV</button
+                ><Icon name="download" size={17} /> {t('Экспорт CSV')}</button
               >{:else if page === 'simulation' && lab.result}<button
                 class="secondary"
-                onclick={() => save('report')}><Icon name="download" size={17} /> Отчёт JSON</button
+                onclick={() => save('report')}
+                ><Icon name="download" size={17} /> {t('Отчёт JSON')}</button
               >{/if}
           </div>
         </section>
         <div class="data-ribbon" class:synthetic={lab.data.synthetic}>
           <div>
             <Icon name={lab.data.synthetic ? 'info' : 'database'} size={16} /><strong
-              >{lab.data.synthetic ? 'Демонстрационный набор' : 'История Bybit'}</strong
+              >{lab.data.synthetic ? t('Демонстрационный набор') : t('История Bybit')}</strong
             ><span
               >{lab.data.synthetic
-                ? 'Синтетические цены · результаты не характеризуют рынок'
-                : `${date(lab.data.start)} — ${date(lab.data.end)} · исторические данные`}</span
+                ? t('Синтетические цены · результаты не характеризуют рынок')
+                : t('{v0} — {v1} · исторические данные', {
+                    v0: date(lab.data.start),
+                    v1: date(lab.data.end),
+                  })}</span
             >
           </div>
           <button onclick={() => (page = 'data')}
-            >{lab.data.synthetic ? 'Загрузить Bybit' : 'Управление данными'}
+            >{lab.data.synthetic ? t('Загрузить Bybit') : t('Управление данными')}
             <Icon name="arrow" size={14} /></button
           >
         </div>
@@ -339,37 +329,37 @@
             <div>
               <strong
                 >{lab.job.kind === 'train'
-                  ? 'Обучение модели'
+                  ? t('Обучение модели')
                   : lab.job.kind === 'import'
-                    ? 'Загрузка истории'
-                    : 'Расчёт'}</strong
-              ><span>{lab.job.message}</span>
+                    ? t('Загрузка истории')
+                    : t('Расчёт')}</strong
+              ><span>{t('Operation progress', { progress: integer(lab.job.progress) })}</span>
             </div>
             <progress max="100" value={lab.job.progress}></progress><b>{lab.job.progress}%</b
-            ><button class="text-button" onclick={() => run('cancel')}>Отменить</button>
+            ><button class="text-button" onclick={() => run('cancel')}>{t('Отменить')}</button>
           </div>{/if}
 
         {#if page === 'overview'}
           <section class="stats-grid">
             <article class="stat">
-              <div class="stat-label">ETH / USDT <span class="eth-symbol">◆</span></div>
+              <div class="stat-label">{t('ETH / USDT')} <span class="eth-symbol">◆</span></div>
               <div class="stat-value">${money(latest?.close || 0)}</div>
               <div class="stat-footer">
                 <span class:positive={change >= 0} class:negative={change < 0}>{pct(change)}</span
-                ><span>за последние 24ч набора</span>
+                ><span>{t('за последние 24ч набора')}</span>
               </div>
             </article>
             <article class="stat">
-              <div class="stat-label">Решение модели <Icon name="brain" size={17} /></div>
+              <div class="stat-label">{t('Решение модели')} <Icon name="brain" size={17} /></div>
               <div class="stat-value signal-value">{signal}</div>
               <div class="stat-footer">
-                {#if lab.model}<span class="accent-text">{confidence.toFixed(1)}%</span><span
-                    >оценка вероятности</span
-                  >{:else}<span class="muted">Ожидает первого обучения</span>{/if}
+                {#if lab.model}<span class="accent-text">{number(confidence, 1)}%</span><span
+                    >{t('оценка вероятности')}</span
+                  >{:else}<span class="muted">{t('Ожидает первого обучения')}</span>{/if}
               </div>
             </article>
             <article class="stat">
-              <div class="stat-label">Капитал симуляции <Icon name="chart" size={17} /></div>
+              <div class="stat-label">{t('Капитал симуляции')} <Icon name="chart" size={17} /></div>
               <div class="stat-value">
                 {lab.result ? '$' + money(lab.result.finalBalance) : '—'}
               </div>
@@ -378,20 +368,23 @@
                     class:positive={lab.result.returnPercent >= 0}
                     class:negative={lab.result.returnPercent < 0}
                     >{pct(lab.result.returnPercent)}</span
-                  ><span>после расходов</span>{:else}<span class="muted"
-                    >Запустите проверку стратегии</span
+                  ><span>{t('после расходов')}</span>{:else}<span class="muted"
+                    >{t('Запустите проверку стратегии')}</span
                   >{/if}
               </div>
             </article>
             <article class="stat">
-              <div class="stat-label">Данные для обучения <Icon name="database" size={17} /></div>
+              <div class="stat-label">
+                {t('Данные для обучения')}
+                <Icon name="database" size={17} />
+              </div>
               <div class="stat-value">
-                {lab.data.count.toLocaleString('en-US')}<small>свечей</small>
+                {integer(lab.data.count)}<small>{t('свечей')}</small>
               </div>
               <div class="stat-footer">
                 <span class="mini-tag">15m</span><span class="mini-tag">1h</span><span
                   class="mini-tag">4h</span
-                ><span class="muted">3 таймфрейма</span>
+                ><span class="muted">{t('3 таймфрейма')}</span>
               </div>
             </article>
           </section>
@@ -401,11 +394,11 @@
                 <div class="instrument">
                   <span class="coin">◆</span>
                   <div>
-                    <h2>Ethereum <span>ETHUSDT</span></h2>
-                    <p>Perpetual futures <span>·</span> Bybit</p>
+                    <h2>{t('Ethereum')} <span>{t('ETHUSDT')}</span></h2>
+                    <p>{t('Perpetual futures')} <span>·</span> {t('Bybit')}</p>
                   </div>
                 </div>
-                <div class="segmented" aria-label="Таймфрейм">
+                <div class="segmented" aria-label={t('Таймфрейм')}>
                   {#each ['15m', '1h', '4h'] as tf}<button
                       class:selected={timeframe === tf}
                       aria-pressed={timeframe === tf}
@@ -415,39 +408,43 @@
               </div>
               <PriceChart candles={lab.charts[timeframe]} />
               <div class="chart-footer">
-                <span><i class="legend-dot green"></i> Закрытые свечи</span><span
-                  >{time(lab.data.end)} UTC <span class="muted">· конец набора</span></span
+                <span><i class="legend-dot green"></i> {t('Закрытые свечи')}</span><span
+                  >{time(lab.data.end)}
+                  {t('UTC')} <span class="muted">{t('· конец набора')}</span></span
                 >
               </div>
             </section>
             <section class="panel intelligence">
               <div class="panel-heading">
-                <h2><Icon name="bolt" size={18} /> AI Insight</h2>
-                <span class="badge accent">24 FEATURES</span>
+                <h2><Icon name="bolt" size={18} /> {t('AI Insight')}</h2>
+                <span class="badge accent">{t('24 FEATURES')}</span>
               </div>
               <div class="intelligence-visual" aria-hidden="true">
-                <strong>24<span>INPUTS</span></strong>
-                <div><span>15 MIN</span><span>01 HOUR</span><span>04 HOURS</span></div>
+                <img src={researchArtwork} alt="" width="1536" height="1024" />
+                <div><span>{t('ETH / RESEARCH')}</span><span>15m · 1h · 4h</span></div>
               </div>
-              <h3>{lab.model ? 'Модель готова к проверке' : 'Рынок — это данные.'}</h3>
+              <h3>{lab.model ? t('Модель готова к проверке') : t('Рынок — это данные.')}</h3>
               <p>
                 {lab.model
-                  ? `Модель ${lab.model.id} обучена на ранней части истории. Проверьте её решения в симуляции.`
-                  : 'Объедините сигналы трёх таймфреймов и обучите свою первую модель.'}
+                  ? t(
+                      'Модель {v0} обучена на ранней части истории. Проверьте её решения в симуляции.',
+                      { v0: lab.model.id },
+                    )
+                  : t('Объедините сигналы трёх таймфреймов и обучите свою первую модель.')}
               </p>
               <div class="insight-rows">
-                <div><span>Алгоритм</span><strong>Softmax regression</strong></div>
-                <div><span>Признаки</span><strong>8 × 3 таймфрейма</strong></div>
+                <div><span>{t('Алгоритм')}</span><strong>{t('Softmax regression')}</strong></div>
+                <div><span>{t('Признаки')}</span><strong>{t('8 × 3 таймфрейма')}</strong></div>
                 <div>
-                  <span>Статус</span><strong class="accent-text"
-                    >{lab.model ? 'Обучена' : 'Готов к обучению'}</strong
+                  <span>{t('Статус')}</span><strong class="accent-text"
+                    >{lab.model ? t('Обучена') : t('Готов к обучению')}</strong
                   >
                 </div>
               </div>
               <button
                 class="wide secondary"
                 onclick={() => (page = lab?.model ? 'simulation' : 'training')}
-                >{lab.model ? 'Перейти к симуляции' : 'Настроить обучение'}<Icon
+                >{lab.model ? t('Перейти к симуляции') : t('Настроить обучение')}<Icon
                   name="arrow"
                   size={16}
                 /></button
@@ -455,8 +452,8 @@
             </section>
           </div>
           <div class="section-label">
-            <h2>Согласованность таймфреймов</h2>
-            <span>Индикаторы на последней закрытой свече</span>
+            <h2>{t('Согласованность таймфреймов')}</h2>
+            <span>{t('Индикаторы на последней закрытой свече')}</span>
           </div>
           <section class="frames-grid">
             {#each lab.frames as frame}<article class="panel frame-card">
@@ -465,24 +462,24 @@
                     class:positive={frame.trend === 'Bullish'}
                     class:negative={frame.trend !== 'Bullish'}
                     class="trend-label"
-                    >{frame.trend === 'Bullish' ? '↗ Восходящий' : '↘ Нисходящий'}</span
+                    >{frame.trend === 'Bullish' ? t('↗ Восходящий') : t('↘ Нисходящий')}</span
                   >
                 </div>
                 <div class="indicator">
-                  <span>RSI <small>14</small></span><strong>{frame.rsi.toFixed(1)}</strong>
+                  <span>{t('RSI')} <small>14</small></span><strong>{number(frame.rsi, 1)}</strong>
                   <div class="rsi-track"><i style:width={`${frame.rsi}%`}></i></div>
                 </div>
                 <div class="frame-bottom">
                   <div>
-                    <span>MACD histogram</span><b
+                    <span>{t('MACD histogram')}</span><b
                       class:positive={frame.macd >= 0}
-                      class:negative={frame.macd < 0}>{frame.macd.toFixed(2)}</b
+                      class:negative={frame.macd < 0}>{number(frame.macd, 2)}</b
                     >
                   </div>
-                  <div><span>ATR <small>14</small></span><b>${frame.atr.toFixed(2)}</b></div>
+                  <div><span>{t('ATR')} <small>14</small></span><b>${number(frame.atr, 2)}</b></div>
                   <div>
-                    <span>EMA 12 / 26</span><b
-                      >{frame.ema12 > frame.ema26 ? 'Bullish' : 'Bearish'}</b
+                    <span>{t('EMA 12 / 26')}</span><b
+                      >{t(frame.ema12 > frame.ema26 ? 'Bullish' : 'Bearish')}</b
                     >
                   </div>
                 </div>
@@ -491,28 +488,28 @@
           <div class="workflow-strip">
             <span class="step-number">01</span>
             <div>
-              <strong>Данные</strong><span
-                >{lab.data.synthetic ? 'Демо-набор' : 'История загружена'}</span
+              <strong>{t('Данные')}</strong><span
+                >{lab.data.synthetic ? t('Демо-набор') : t('История загружена')}</span
               >
             </div>
             <Icon name="arrow" size={17} /><span class="step-number">02</span>
             <div>
-              <strong>Обучение</strong><span
-                >{lab.model ? 'Модель сохранена' : '24 признака · 3 класса'}</span
+              <strong>{t('Обучение')}</strong><span
+                >{lab.model ? t('Модель сохранена') : t('24 признака · 3 класса')}</span
               >
             </div>
             <Icon name="arrow" size={17} /><span class="step-number">03</span>
-            <div><strong>Симуляция</strong><span>Плечо · расходы · риск</span></div>
+            <div><strong>{t('Симуляция')}</strong><span>{t('Плечо · расходы · риск')}</span></div>
             <button class="text-button" onclick={() => (page = 'method')}
-              >Методология <Icon name="arrow" size={16} /></button
+              >{t('Методология')} <Icon name="arrow" size={16} /></button
             >
           </div>
         {:else if page === 'training'}
           <div class="two-columns">
             <section class="panel">
               <div class="panel-heading">
-                <h2>Параметры обучения</h2>
-                <span class="badge accent">SUPERVISED ML</span>
+                <h2>{t('Параметры обучения')}</h2>
+                <span class="badge accent">{t('SUPERVISED ML')}</span>
               </div>
               <form
                 class="panel-body"
@@ -522,136 +519,149 @@
                 }}
               >
                 <p class="form-description">
-                  Модель учится классифицировать будущее движение цены: short, ожидание или long.
+                  {t(
+                    'Модель учится классифицировать будущее движение цены: short, ожидание или long.',
+                  )}
                 </p>
                 <div class="form-grid">
                   <label
-                    >Количество эпох<input
+                    >{t('Количество эпох')}<input
                       type="number"
                       min="10"
                       max="500"
                       step="5"
                       bind:value={training.epochs}
                       required
-                    /><small>Число проходов по обучающей выборке</small></label
+                    /><small>{t('Число проходов по обучающей выборке')}</small></label
                   ><label
-                    >Скорость обучения<input
+                    >{t('Скорость обучения')}<input
                       type="number"
                       min="0.001"
                       max="0.2"
                       step="0.001"
                       bind:value={training.learningRate}
                       required
-                    /><small>Шаг обновления весов</small></label
+                    /><small>{t('Шаг обновления весов')}</small></label
                   ><label
-                    >Горизонт прогноза<select bind:value={training.horizon}
-                      ><option value={1}>15 минут · 1 свеча</option><option value={4}
-                        >1 час · 4 свечи</option
-                      ><option value={8}>2 часа · 8 свечей</option><option value={16}
-                        >4 часа · 16 свечей</option
+                    >{t('Горизонт прогноза')}<select bind:value={training.horizon}
+                      ><option value={1}>{t('15 минут · 1 свеча')}</option><option value={4}
+                        >{t('1 час · 4 свечи')}</option
+                      ><option value={8}>{t('2 часа · 8 свечей')}</option><option value={16}
+                        >{t('4 часа · 16 свечей')}</option
                       ></select
-                    ><small>От открытия следующей свечи</small></label
+                    ><small>{t('От открытия следующей свечи')}</small></label
                   ><label
-                    >Порог движения<select bind:value={training.labelThreshold}
-                      ><option value={0.001}>±0.1%</option><option value={0.003}>±0.3%</option
-                      ><option value={0.005}>±0.5%</option><option value={0.01}>±1.0%</option
+                    >{t('Порог движения')}<select bind:value={training.labelThreshold}
+                      ><option value={0.001}>±{number(0.1, 1)}%</option><option value={0.003}
+                        >±{number(0.3, 1)}%</option
+                      ><option value={0.005}>±{number(0.5, 1)}%</option><option value={0.01}
+                        >±{number(1, 1)}%</option
                       ></select
-                    ><small>Меньшее движение → ожидание</small></label
+                    ><small>{t('Меньшее движение → ожидание')}</small></label
                   >
                 </div>
                 <div class="split-visual">
-                  <span>60% обучение</span><span>20% валидация</span><span>20% тест</span>
+                  <span>{t('60% обучение')}</span><span>{t('20% валидация')}</span><span
+                    >{t('20% тест')}</span
+                  >
                 </div>
                 <p class="note">
-                  Хронологическое разделение с пропуском свечей между выборками. Лучшая эпоха
-                  выбирается по ошибке валидации. Повторное обучение заменит текущую модель и её
-                  симуляции.
+                  {t(
+                    'Хронологическое разделение с пропуском свечей между выборками. Лучшая эпоха выбирается по ошибке валидации. Повторное обучение заменит текущую модель и её симуляции.',
+                  )}
                 </p>
                 <button class="primary wide" type="submit" disabled={busy || !connected}
                   ><Icon name="play" size={17} />{busy
-                    ? 'Выполняется операция…'
-                    : 'Обучить модель'}</button
+                    ? t('Выполняется операция…')
+                    : t('Обучить модель')}</button
                 >
               </form>
             </section>
             <section class="panel">
               <div class="panel-heading">
-                <h2>Качество модели</h2>
+                <h2>{t('Качество модели')}</h2>
                 {#if lab.model}<button
                     class="icon-button"
-                    title="Экспорт модели"
-                    aria-label="Экспорт модели"
+                    title={t('Экспорт модели')}
+                    aria-label={t('Экспорт модели')}
                     onclick={() => save('model')}><Icon name="download" size={18} /></button
                   >{/if}
               </div>
               {#if lab.model}<div class="panel-body">
                   <div class="model-meta">
-                    <span class="badge green">ОБУЧЕНА</span><span
-                      >#{lab.model.id} · эпоха {lab.model.bestEpoch}</span
+                    <span class="badge green">{t('ОБУЧЕНА')}</span><span
+                      >#{lab.model.id} {t('· эпоха')} {lab.model.bestEpoch}</span
                     >
                   </div>
                   <div class="metrics-inline">
                     <div>
-                      <span>Точность на тесте</span><strong
-                        >{(lab.model.test.accuracy * 100).toFixed(1)}%</strong
+                      <span>{t('Точность на тесте')}</span><strong
+                        >{number(lab.model.test.accuracy * 100, 1)}%</strong
                       >
                     </div>
                     <div>
-                      <span>Базовая точность</span><strong
-                        >{(lab.model.test.baselineAccuracy * 100).toFixed(1)}%</strong
+                      <span>{t('Базовая точность')}</span><strong
+                        >{number(lab.model.test.baselineAccuracy * 100, 1)}%</strong
                       >
                     </div>
                     <div>
-                      <span>Log loss</span><strong>{lab.model.test.logLoss.toFixed(3)}</strong>
+                      <span>{t('Log loss')}</span><strong
+                        >{number(lab.model.test.logLoss, 3)}</strong
+                      >
                     </div>
                   </div>
                   <LineChart
                     values={lab.model.loss.map((l) => l.train)}
                     secondary={lab.model.loss.map((l) => l.validation)}
-                    label="Ошибка обучения и валидации по эпохам"
+                    label={t('Ошибка обучения и валидации по эпохам')}
                   />
                   <div class="chart-legend">
-                    <span><i class="legend-dot accent"></i> Обучение</span><span
-                      ><i class="legend-dot green"></i> Валидация</span
+                    <span><i class="legend-dot accent"></i> {t('Обучение')}</span><span
+                      ><i class="legend-dot green"></i> {t('Валидация')}</span
                     >
                   </div>
                   <p class="note">
-                    База всегда выбирает самый частый класс обучающей выборки. Тест: {lab.model.test.samples.toLocaleString()}
-                    примеров. Точность не измеряет доходность.
+                    {t('База всегда выбирает самый частый класс обучающей выборки. Тест:')}
+                    {integer(lab.model.test.samples)}
+                    {t('примеров. Точность не измеряет доходность.')}
                   </p>
                 </div>{:else}<div class="empty-state">
                   <span class="empty-icon"><Icon name="brain" size={34} /></span>
-                  <h3>Начните первый эксперимент</h3>
+                  <h3>{t('Начните первый эксперимент')}</h3>
                   <p>
-                    После обучения здесь появятся ошибка по эпохам и качество на отложенных данных.
+                    {t(
+                      'После обучения здесь появятся ошибка по эпохам и качество на отложенных данных.',
+                    )}
                   </p>
                 </div>{/if}
             </section>
           </div>
           {#if lab.model}<section class="panel feature-panel">
               <div class="panel-heading">
-                <h2>Влияние признаков на класс Long</h2>
-                <span>Коэффициенты стандартизированных признаков</span>
+                <h2>{t('Влияние признаков на класс Long')}</h2>
+                <span>{t('Коэффициенты стандартизированных признаков')}</span>
               </div>
               <div class="feature-grid">
                 {#each lab.features
                   .map((name, i) => ({ name, value: lab!.model!.weights[2][i] }))
                   .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
                   .slice(0, 9) as feature}<div class="feature-row">
-                    <span>{feature.name}</span>
+                    <span>{featureLabel(feature.name)}</span>
                     <div>
                       <i style:width={`${Math.min(100, Math.abs(feature.value) * 180)}%`}></i>
                     </div>
-                    <b>{feature.value.toFixed(3)}</b>
+                    <b>{number(feature.value, 3)}</b>
                   </div>{/each}
               </div>
-              <p class="note">Коэффициенты описывают модель, а не причинное влияние на рынок.</p>
+              <p class="note">
+                {t('Коэффициенты описывают модель, а не причинное влияние на рынок.')}
+              </p>
             </section>{/if}
         {:else if page === 'simulation'}
           <div class="simulation-grid">
             <section class="panel">
               <div class="panel-heading">
-                <h2><Icon name="settings" size={18} /> Исполнение и риск</h2>
+                <h2><Icon name="settings" size={18} /> {t('Исполнение и риск')}</h2>
               </div>
               <form
                 class="panel-body"
@@ -676,18 +686,19 @@
                     >{/each}
                 </div>
                 <p class="note">
-                  1 bps = 0.01%. Комиссия и маржа — настраиваемые допущения. Funding загружен вместе
-                  с историей. Вход на открытии следующей свечи.
+                  {t(
+                    '1 bps = 0.01%. Комиссия и маржа — настраиваемые допущения. Funding загружен вместе с историей. Вход на открытии следующей свечи.',
+                  )}
                 </p>
                 <button
                   class="primary wide"
                   type="submit"
                   disabled={busy || !connected || !lab.model}
-                  ><Icon name="play" size={17} /> Запустить симуляцию</button
+                  ><Icon name="play" size={17} /> {t('Запустить симуляцию')}</button
                 >{#if !lab.model}<button
                     type="button"
                     class="text-button centered"
-                    onclick={() => (page = 'training')}>Сначала обучите модель →</button
+                    onclick={() => (page = 'training')}>{t('Сначала обучите модель →')}</button
                   >{/if}
               </form>
             </section>
@@ -695,7 +706,7 @@
               {#if lab.result}{@const result = lab.result}
                 <section class="stats-grid compact">
                   <article class="stat">
-                    <div class="stat-label">Доходность</div>
+                    <div class="stat-label">{t('Доходность')}</div>
                     <div
                       class="stat-value"
                       class:positive={result.returnPercent >= 0}
@@ -703,32 +714,35 @@
                     >
                       {pct(result.returnPercent)}
                     </div>
-                    <div class="stat-footer">После всех расходов</div>
+                    <div class="stat-footer">{t('После всех расходов')}</div>
                   </article>
                   <article class="stat">
-                    <div class="stat-label">Макс. просадка</div>
-                    <div class="stat-value">{result.maxDrawdownPercent.toFixed(2)}%</div>
-                    <div class="stat-footer">По капиталу на закрытии свечей</div>
+                    <div class="stat-label">{t('Макс. просадка')}</div>
+                    <div class="stat-value">{number(result.maxDrawdownPercent, 2)}%</div>
+                    <div class="stat-footer">{t('По капиталу на закрытии свечей')}</div>
                   </article>
                   <article class="stat">
-                    <div class="stat-label">Сделок / Win rate</div>
+                    <div class="stat-label">{t('Сделок / Win rate')}</div>
                     <div class="stat-value">
-                      {result.count}<small>{(result.winRate * 100).toFixed(1)}%</small>
+                      {result.count}<small>{number(result.winRate * 100, 1)}%</small>
                     </div>
                     <div class="stat-footer">
-                      Profit factor: {result.profitFactor?.toFixed(2) || '—'}
+                      {t('Profit factor:')}
+                      {result.profitFactor === null ? '—' : number(result.profitFactor, 2)}
                     </div>
                   </article>
                 </section>
                 <section class="panel">
                   <div class="panel-heading">
-                    <h2>Кривая капитала</h2>
+                    <h2>{t('Кривая капитала')}</h2>
                     <span class="badge" class:amber={result.halted} class:green={!result.halted}
-                      >{result.halted ? 'ОСТАНОВКА ПО РИСКУ' : 'ЗАВЕРШЕНО'}</span
+                      >{result.halted ? t('ОСТАНОВКА ПО РИСКУ') : t('ЗАВЕРШЕНО')}</span
                     >
                   </div>
                   <div class="panel-body">
-                    <div class="equity-value">${money(result.finalBalance)}<span>USDT</span></div>
+                    <div class="equity-value">
+                      ${money(result.finalBalance)}<span>{t('USDT')}</span>
+                    </div>
                     <LineChart
                       values={result.equity.map((p) => p.equity)}
                       color={result.returnPercent >= 0 ? 'var(--positive)' : 'var(--negative)'}
@@ -739,51 +753,57 @@
                       >
                     </div>
                     <div class="costs">
-                      <div><span>Комиссии</span><strong>${money(result.totalFees)}</strong></div>
                       <div>
-                        <span>Funding (оплачено)</span><strong>${money(result.totalFunding)}</strong
+                        <span>{t('Комиссии')}</span><strong>${money(result.totalFees)}</strong>
+                      </div>
+                      <div>
+                        <span>{t('Funding (оплачено)')}</span><strong
+                          >${money(result.totalFunding)}</strong
                         >
                       </div>
                       <div>
-                        <span>Плечо в запуске</span><strong>{result.options.leverage}×</strong>
+                        <span>{t('Плечо в запуске')}</span><strong
+                          >{result.options.leverage}×</strong
+                        >
                       </div>
                     </div>
                     <button class="secondary wide" onclick={() => (page = 'journal')}
-                      >Открыть журнал сделок <Icon name="arrow" size={17} /></button
+                      >{t('Открыть журнал сделок')} <Icon name="arrow" size={17} /></button
                     >
                   </div>
                 </section>{:else}<section class="panel fill-height">
                   <div class="empty-state">
                     <span class="empty-icon"><Icon name="chart" size={38} /></span>
-                    <h3>Проверьте гипотезу</h3>
+                    <h3>{t('Проверьте гипотезу')}</h3>
                     <p>
-                      Симуляция использует последние 20% истории, не участвовавшие в обучении.
-                      Результат появится после запуска.
+                      {t(
+                        'Симуляция использует последние 20% истории, не участвовавшие в обучении. Результат появится после запуска.',
+                      )}
                     </p>
-                    <div class="badge neutral">HISTORICAL PAPER TRADING</div>
+                    <div class="badge neutral">{t('HISTORICAL PAPER TRADING')}</div>
                   </div>
                 </section>{/if}
             </div>
           </div>
           {#if lab.runs.length}<section class="panel runs-panel">
               <div class="panel-heading">
-                <h2>История экспериментов</h2>
-                <span>Последние 20 запусков текущей модели</span>
+                <h2>{t('История экспериментов')}</h2>
+                <span>{t('Последние 20 запусков текущей модели')}</span>
               </div>
               <div class="table-wrap">
                 <table>
                   <thead
                     ><tr
-                      ><th>Запуск</th><th>Модель</th><th>Доходность</th><th>Просадка</th><th
-                        >Сделки</th
-                      ><th>Капитал</th></tr
+                      ><th>{t('Запуск')}</th><th>{t('Модель')}</th><th>{t('Доходность')}</th><th
+                        >{t('Просадка')}</th
+                      ><th>{t('Сделки')}</th><th>{t('Капитал')}</th></tr
                     ></thead
                   ><tbody
                     >{#each lab.runs as run}<tr
                         ><td>#{run.id}</td><td class="muted">{run.modelId}</td><td
                           class:positive={run.returnPercent >= 0}
                           class:negative={run.returnPercent < 0}>{pct(run.returnPercent)}</td
-                        ><td>{run.maxDrawdownPercent.toFixed(2)}%</td><td>{run.count}</td><td
+                        ><td>{number(run.maxDrawdownPercent, 2)}%</td><td>{run.count}</td><td
                           >${money(run.finalBalance)}</td
                         ></tr
                       >{/each}</tbody
@@ -794,9 +814,9 @@
         {:else if page === 'journal'}
           <section class="panel">
             <div class="panel-heading">
-              <h2>Исполненные сделки <span class="count">{lab.result?.count || 0}</span></h2>
+              <h2>{t('Исполненные сделки')} <span class="count">{lab.result?.count || 0}</span></h2>
               <div class="segmented">
-                {#each [{ id: 'all', text: 'Все' }, { id: 'Long', text: 'Long' }, { id: 'Short', text: 'Short' }] as f}<button
+                {#each [{ id: 'all', text: t('Все') }, { id: 'Long', text: t('Long') }, { id: 'Short', text: t('Short') }] as f}<button
                     class:selected={filter === f.id}
                     aria-pressed={filter === f.id}
                     onclick={() => (filter = f.id)}>{f.text}</button
@@ -807,9 +827,9 @@
                 <table>
                   <thead
                     ><tr
-                      ><th>Вход · UTC</th><th>Сторона</th><th>Цена входа</th><th>Цена выхода</th><th
-                        >Объём ETH</th
-                      ><th>Результат</th><th>Комиссия</th><th>Funding</th><th>Причина выхода</th
+                      ><th>{t('Вход · UTC')}</th><th>{t('Сторона')}</th><th>{t('Цена входа')}</th
+                      ><th>{t('Цена выхода')}</th><th>{t('Объём ETH')}</th><th>{t('Результат')}</th
+                      ><th>{t('Комиссия')}</th><th>{t('Funding')}</th><th>{t('Причина выхода')}</th
                       ></tr
                     ></thead
                   ><tbody
@@ -818,32 +838,33 @@
                           ><span
                             class="trade-side"
                             class:positive={trade.side === 'Long'}
-                            class:negative={trade.side === 'Short'}>{trade.side}</span
+                            class:negative={trade.side === 'Short'}>{t(trade.side)}</span
                           ></td
                         ><td>{money(trade.entry)}</td><td>{money(trade.exit)}</td><td
-                          >{trade.quantity.toFixed(4)}</td
+                          >{number(trade.quantity, 4)}</td
                         ><td class:positive={trade.pnl >= 0} class:negative={trade.pnl < 0}
                           >{trade.pnl > 0 ? '+' : ''}{money(trade.pnl)}</td
                         ><td>{money(trade.fees)}</td><td>{money(trade.funding)}</td><td
-                          ><span class="reason">{trade.reason}</span></td
+                          ><span class="reason">{t(trade.reason)}</span></td
                         ></tr
                       >{/each}</tbody
                   >
                 </table>
               </div>
               <p class="note table-note">
-                Последние 100 сделок последнего запуска. CSV содержит полный журнал. Все суммы —
-                USDT, результат включает расходы.
+                {t(
+                  'Последние 100 сделок последнего запуска. CSV содержит полный журнал. Все суммы — USDT, результат включает расходы.',
+                )}
               </p>{:else}<div class="empty-state">
                 <span class="empty-icon"><Icon name="list" size={36} /></span>
-                <h3>{lab.result ? 'Нет сделок по этому фильтру' : 'Журнал пока пуст'}</h3>
+                <h3>{lab.result ? t('Нет сделок по этому фильтру') : t('Журнал пока пуст')}</h3>
                 <p>
                   {lab.result
-                    ? 'Модель может оставаться вне рынка при высоком пороге вероятности.'
-                    : 'Запустите симуляцию, чтобы увидеть решения и результаты модели.'}
+                    ? t('Модель может оставаться вне рынка при высоком пороге вероятности.')
+                    : t('Запустите симуляцию, чтобы увидеть решения и результаты модели.')}
                 </p>
                 <button class="secondary" onclick={() => (page = 'simulation')}
-                  >К симуляции <Icon name="arrow" size={16} /></button
+                  >{t('К симуляции')} <Icon name="arrow" size={16} /></button
                 >
               </div>{/if}
           </section>
@@ -851,8 +872,8 @@
           <div class="two-columns">
             <section class="panel">
               <div class="panel-heading">
-                <h2>Загрузить историю</h2>
-                <span class="bybit-word">BYBIT</span>
+                <h2>{t('Загрузить историю')}</h2>
+                <span class="bybit-word">{t('BYBIT')}</span>
               </div>
               <form
                 class="panel-body"
@@ -864,38 +885,39 @@
                 <div class="data-pair">
                   <span class="coin large">◆</span>
                   <div>
-                    <h3>ETH / USDT</h3>
-                    <p>USDT perpetual · linear · 15 минут</p>
+                    <h3>{t('ETH / USDT')}</h3>
+                    <p>{t('USDT perpetual · linear · 15 минут')}</p>
                   </div>
-                  <span class="badge neutral">PUBLIC API</span>
+                  <span class="badge neutral">{t('PUBLIC API')}</span>
                 </div>
                 <label
-                  >Глубина истории<select bind:value={days}
-                    ><option value={30}>30 дней · 2 880 свечей</option><option value={90}
-                      >90 дней · 8 640 свечей</option
-                    ><option value={180}>180 дней · 17 280 свечей</option><option value={360}
-                      >360 дней · 34 560 свечей</option
+                  >{t('Глубина истории')}<select bind:value={days}
+                    ><option value={30}>{t('30 дней · 2 880 свечей')}</option><option value={90}
+                      >{t('90 дней · 8 640 свечей')}</option
+                    ><option value={180}>{t('180 дней · 17 280 свечей')}</option><option value={360}
+                      >{t('360 дней · 34 560 свечей')}</option
                     ></select
                   ></label
                 >
                 <div class="check-list">
-                  <p><Icon name="check" size={16} /> Только полностью закрытые свечи</p>
-                  <p><Icon name="check" size={16} /> Автоматическое построение 1h и 4h</p>
-                  <p><Icon name="check" size={16} /> Исторические платежи funding</p>
-                  <p><Icon name="check" size={16} /> Проверка пропусков и целостности</p>
+                  <p><Icon name="check" size={16} /> {t('Только полностью закрытые свечи')}</p>
+                  <p><Icon name="check" size={16} /> {t('Автоматическое построение 1h и 4h')}</p>
+                  <p><Icon name="check" size={16} /> {t('Исторические платежи funding')}</p>
+                  <p><Icon name="check" size={16} /> {t('Проверка пропусков и целостности')}</p>
                 </div>
                 <p class="note">
-                  Новый набор заменит текущую модель и симуляции. При ошибке загрузки текущая
-                  рабочая область сохранится. API-ключ не требуется.
+                  {t(
+                    'Новый набор заменит текущую модель и симуляции. При ошибке загрузки текущая рабочая область сохранится. API-ключ не требуется.',
+                  )}
                 </p>
                 <button class="primary wide" type="submit" disabled={busy || !connected}
-                  ><Icon name="download" size={17} /> Загрузить данные Bybit</button
+                  ><Icon name="download" size={17} /> {t('Загрузить данные Bybit')}</button
                 >
               </form>
             </section>
             <section class="panel">
               <div class="panel-heading">
-                <h2>Текущий набор</h2>
+                <h2>{t('Текущий набор')}</h2>
                 <span
                   class="badge"
                   class:amber={lab.data.synthetic}
@@ -906,35 +928,36 @@
               <div class="panel-body">
                 <dl class="dataset-details">
                   <div>
-                    <dt>Источник</dt>
-                    <dd>{lab.data.source}</dd>
+                    <dt>{t('Источник')}</dt>
+                    <dd>{lab.data.synthetic ? t('Демонстрационный набор') : lab.data.source}</dd>
                   </div>
                   <div>
-                    <dt>Период UTC</dt>
+                    <dt>{t('Период UTC')}</dt>
                     <dd>{date(lab.data.start)} — {date(lab.data.end)}</dd>
                   </div>
                   <div>
-                    <dt>Свечей 15m</dt>
-                    <dd>{lab.data.count.toLocaleString()}</dd>
+                    <dt>{t('Свечей 15m')}</dt>
+                    <dd>{integer(lab.data.count)}</dd>
                   </div>
                   <div>
-                    <dt>Funding событий</dt>
+                    <dt>{t('Funding событий')}</dt>
                     <dd>{lab.data.fundingCount}</dd>
                   </div>
                   <div>
-                    <dt>Идентификатор</dt>
+                    <dt>{t('Идентификатор')}</dt>
                     <dd class="mono">{lab.data.id}</dd>
                   </div>
                   <div>
-                    <dt>Загружено</dt>
+                    <dt>{t('Загружено')}</dt>
                     <dd>{date(lab.data.importedAt)}</dd>
                   </div>
                 </dl>
                 <div class="demo-box">
-                  <h3>Демо без подключения</h3>
+                  <h3>{t('Демо без подключения')}</h3>
                   <p>
-                    Воспроизводимый синтетический набор для проверки функций приложения. Не подходит
-                    для оценки торговой стратегии.
+                    {t(
+                      'Воспроизводимый синтетический набор для проверки функций приложения. Не подходит для оценки торговой стратегии.',
+                    )}
                   </p>
                   <button
                     class="secondary wide"
@@ -946,11 +969,11 @@
                       } else resetArmed = true;
                     }}
                     >{resetArmed
-                      ? 'Подтвердить замену данных и модели'
-                      : 'Использовать демо-набор'}</button
+                      ? t('Подтвердить замену данных и модели')
+                      : t('Использовать демо-набор')}</button
                   >{#if resetArmed}<button
                       class="text-button centered"
-                      onclick={() => (resetArmed = false)}>Отмена</button
+                      onclick={() => (resetArmed = false)}>{t('Отмена')}</button
                     >{/if}
                 </div>
               </div>
@@ -958,7 +981,7 @@
           </div>
         {:else}
           <div class="method-grid">
-            {#each [{ n: '01', title: 'Из истории — в признаки', text: 'Закрытые свечи Bybit ETHUSDT объединяются в 15m, 1h и 4h. На каждом таймфрейме рассчитываются EMA, RSI, MACD, ATR, полосы Боллинджера, объём и импульс. Старшая свеча доступна только после её закрытия.' }, { n: '02', title: 'Модель действительно обучается', text: 'Многоклассовая логистическая регрессия обновляет веса градиентным спуском. Три класса: short, ожидание, long. Среднее и масштаб признаков вычисляются только на обучающей выборке. Вероятности не калиброваны.' }, { n: '03', title: 'Будущее отделено от прошлого', text: '60% истории используются для обучения, 20% для выбора эпохи, 20% для теста. Между выборками исключается горизонт прогноза. Симуляция начинается после первого тестового сигнала, на открытии следующей свечи.' }, { n: '04', title: 'Расходы и исполнение', text: 'Учитываются комиссия входа и выхода, направленное проскальзывание и исторический funding. Позиция ограничена риском до стопа и доступной маржой. Если свеча задевает стоп и тейк, первым считается стоп.' }, { n: '05', title: 'Границы симуляции', text: 'Исполнение моделируется по OHLC, без стакана и частичных исполнений. Funding оценивается по цене открытия свечи. Ликвидация приближённая: нет mark price, ступенчатой маржи, ADL и ликвидационной комиссии. Просадка контролируется на закрытии свечи; гэп может превысить лимит.' }, { n: '06', title: 'Как читать результат', text: 'Бэктест не гарантирует будущей прибыли. Многократная настройка параметров по одному тесту ведёт к переобучению: для нового вывода нужен новый период. Приложение исследовательское: реальных ордеров, ключей биржи и фоновой торговли нет.' }] as item}<section
+            {#each [{ n: '01', title: t('Из истории — в признаки'), text: t('Закрытые свечи Bybit ETHUSDT объединяются в 15m, 1h и 4h. На каждом таймфрейме рассчитываются EMA, RSI, MACD, ATR, полосы Боллинджера, объём и импульс. Старшая свеча доступна только после её закрытия.') }, { n: '02', title: t('Модель действительно обучается'), text: t('Многоклассовая логистическая регрессия обновляет веса градиентным спуском. Три класса: short, ожидание, long. Среднее и масштаб признаков вычисляются только на обучающей выборке. Вероятности не калиброваны.') }, { n: '03', title: t('Будущее отделено от прошлого'), text: t('60% истории используются для обучения, 20% для выбора эпохи, 20% для теста. Между выборками исключается горизонт прогноза. Симуляция начинается после первого тестового сигнала, на открытии следующей свечи.') }, { n: '04', title: t('Расходы и исполнение'), text: t('Учитываются комиссия входа и выхода, направленное проскальзывание и исторический funding. Позиция ограничена риском до стопа и доступной маржой. Если свеча задевает стоп и тейк, первым считается стоп.') }, { n: '05', title: t('Границы симуляции'), text: t('Исполнение моделируется по OHLC, без стакана и частичных исполнений. Funding оценивается по цене открытия свечи. Ликвидация приближённая: нет mark price, ступенчатой маржи, ADL и ликвидационной комиссии. Просадка контролируется на закрытии свечи; гэп может превысить лимит.') }, { n: '06', title: t('Как читать результат'), text: t('Бэктест не гарантирует будущей прибыли. Многократная настройка параметров по одному тесту ведёт к переобучению: для нового вывода нужен новый период. Приложение исследовательское: реальных ордеров, ключей биржи и фоновой торговли нет.') }] as item}<section
                 class="panel method-card"
               >
                 <span class="method-number">{item.n}</span>
@@ -969,8 +992,9 @@
         {/if}
         <footer class="page-footer">
           <span
-            ><Icon name="shield" size={14} /> Локальная лаборатория. Реальные ордера не отправляются.</span
-          ><span>ETHUSDT PERPETUAL <span>·</span> XKILLER LAB</span>
+            ><Icon name="shield" size={14} />
+            {t('Локальная лаборатория. Реальные ордера не отправляются.')}</span
+          ><span>{t('ETHUSDT PERPETUAL')} <span>·</span> {t('XKILLER LAB')}</span>
         </footer>
       {/if}
     </main>

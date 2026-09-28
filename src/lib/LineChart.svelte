@@ -1,4 +1,6 @@
 <script lang="ts">
+  import { t } from './i18n.svelte';
+  import { number } from './format.svelte';
   let {
     values,
     secondary = [],
@@ -17,7 +19,7 @@
   );
 </script>
 
-<svg viewBox="0 0 810 215" role="img" aria-label={label} class="line-chart">
+<svg viewBox="0 0 810 215" role="img" aria-label={t(label)} class="line-chart">
   {#each [30, 80, 130, 180] as y}<line x1="20" x2="790" y1={y} y2={y} class="grid-line" />{/each}
   {#if values.length}<polygon
       points={`20,200 ${path(values)} 780,200`}
@@ -30,7 +32,7 @@
       stroke="var(--positive)"
       stroke-width="2"
     />{/if}
-  <text x="20" y="14" class="axis">{max.toFixed(2)}</text><text x="20" y="212" class="axis"
-    >{min.toFixed(2)}</text
+  <text x="20" y="14" class="axis">{number(max, 2)}</text><text x="20" y="212" class="axis"
+    >{number(min, 2)}</text
   >
 </svg>

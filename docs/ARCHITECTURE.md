@@ -17,7 +17,7 @@ Keep additions within these boundaries. Prefer a small working slice over specul
 | `Lab`                   | Own one workspace, background job lifecycle, persistence, and export                      |
 | ASP.NET Core host       | Bind to loopback, authenticate requests, validate commands, expose a small API            |
 | Electron main           | Launch/stop sidecar; own token; validate IPC sender/action; save native exports           |
-| Preload                 | Expose only `request(action, payload)` and `export(kind)`                                 |
+| Preload                 | Expose research requests/exports and validated appearance get/set methods               |
 | Svelte                  | Display state, edit experiment parameters, submit actions, poll job progress              |
 
 The API returns immediately for import, training, and simulation. The UI polls state every 900 ms without overlapping poll calls. A running job rejects competing state-changing jobs. Candidate results are computed before committing; a successful persistence write happens before replacing the in-memory state.
@@ -37,6 +37,8 @@ Pure C# research core
 The renderer has no Node integration, has context isolation and sandboxing enabled, and never receives the authentication token. Main-frame IPC calls must originate from the expected application URL. Popups, external navigation, and permission requests are denied. The sidecar binds only to `127.0.0.1`; an incorrect or missing token yields HTTP 401. Request bodies are capped at 16 KiB.
 
 For development only, Vite can proxy requests to the sidecar using the token held in its process environment. This convenience endpoint must never be exposed to untrusted networks.
+
+Appearance is a separate UI concern. Shared validators restrict preferences to two themes and six locales. Electron serializes trusted `preferences:get` / `preferences:set` calls and atomically stores a small `preferences.json` alongside the research workspace. The Svelte preference store applies the saved theme, HTML language, and color scheme before mounting; its reactive locale drives translation and `Intl` formatting. Browser development uses local storage through the same store. See [localization](LOCALIZATION.md) for boundaries and extension rules.
 
 ## Persistence and process lifecycle
 

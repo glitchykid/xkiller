@@ -29,9 +29,19 @@ Verified locally on Windows x64 on 2026-09-28. This record describes functional 
 
 - A second client regression check verifies that filesystem aliases resolve to the same trusted packaged document, while other archives, other documents, remote URLs, and modified URLs are rejected. This addresses Windows portable extraction paths without weakening sender checks.
 
-Two additional client checks cover theme persistence, invalid preference files and writes, preservation of research files, system/browser/native preference precedence, blocked browser storage, and failed native writes. Run `npm run test` for all 21 checks. These are meaningful invariants and demonstrated integration regressions; no claim of exhaustive correctness is made.
+Four additional client checks cover legacy/malformed preference migration, persistence without changing research data, static translation coverage in all six languages, matching placeholders, interpolation, and diagnostic fallbacks. Run `npm run test` for all 23 current checks. These are meaningful invariants and demonstrated integration regressions; no claim of exhaustive correctness is made.
 
 ## UI and integration
+
+### Version 0.2.1 glass interface, localization, and icons
+
+All six pages were exercised in Russian, English, Ukrainian, Korean, Japanese, and Simplified Chinese at a 1024 px browser width. Forms passed native validity checks and there was no page-level horizontal overflow in any of the 36 combinations. The English, Korean, Japanese, and Chinese main content contained no leftover Russian labels. Both palettes were visually inspected at 1480 px; dark simulation and Japanese methodology were inspected at 1024 px and the light Chinese data page at 760 px. Browser reload restored the selected Chinese locale and light theme. No browser runtime errors were reported.
+
+All 23 automated checks passed. The production package passed Svelte/TypeScript diagnostics with zero errors and warnings and built the self-contained .NET service successfully. The 1536 px generated Ethereum artwork and 256 px UI icon loaded from local assets. All seven generated ICO variants were compared byte-for-byte with the embedded resources of both the application EXE and portable launcher; both contained the correct generated icon. Windows product metadata reports Xkiller 0.2.1.0.
+
+The unpacked desktop build read a legacy theme-only dark preference, defaulted to Russian, and retained the dataset, model, and three runs from an isolated research copy. Changing to Japanese and light mode persisted both settings through the trusted IPC bridge. A simulation launched from that Japanese UI completed with 14 trades and added a fourth run without alerts.
+
+The actual portable EXE was then launched from its temporary extraction directory. It restored Japanese, light mode, model c9f1ce81, four runs, and the latest 14-trade result. Both local images loaded, renderer Node access was undefined, and the bridge was available. Changing to Korean and dark mode succeeded from the portable build. No runtime errors were reported. An independent SHA-256 calculation matched the packaged checksum. The executable remains unsigned.
 
 ### Version 0.2.0 appearance update
 

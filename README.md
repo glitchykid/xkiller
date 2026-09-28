@@ -1,12 +1,10 @@
 # Xkiller
 
-A local research lab for learning and testing ETHUSDT perpetual futures strategies on **Bybit**. Built with **C# / .NET 10**, **Electron**, **TypeScript**, and **Svelte 5**. The interface is in Russian; project documentation is in English.
+A local research lab for learning and testing ETHUSDT perpetual futures strategies on **Bybit**. Built with **C# / .NET 10**, **Electron**, **TypeScript**, and **Svelte 5**. Available in Russian, English, Ukrainian, Korean, Japanese, and Simplified Chinese. Project documentation is in English.
 
 Xkiller trains a real, reproducible classifier on technical indicators, then simulates its decisions on a later section of history. It is a research application, not a proven profitable trading system. **No exchange credentials or real order submission are implemented.**
 
-![Xkiller dark brutalist workspace with imported Bybit data](docs/images/overview.png)
-
-![Xkiller light brutalist workspace with the same research data](docs/images/overview-light.png)
+![Xkiller dark glass workspace with imported Bybit data](docs/images/overview.png)
 
 ## Download
 
@@ -14,9 +12,13 @@ Download the Windows x64 portable executable from [GitHub Releases](https://gith
 
 ## Appearance
 
-Every screen supports **light and dark themes** through the controls in the top bar. The first desktop launch follows the system appearance. Selecting a theme saves it for future launches, including portable extraction into a different temporary directory. The visual language uses square panels, hard borders, offset shadows, bold headings, numbered navigation, and an acid-lime accent. Charts, forms, tables, status messages, and native window appearance follow the chosen theme.
+Every screen uses **Glass Morphism in light and dark themes**: translucent panels, blurred surfaces, soft violet and cyan gradients, rounded controls, and restrained shadows. Charts, forms, tables, and the native Electron window follow the selected palette.
 
-The desktop preference is stored separately from research data. Browser development stores the theme in local storage. See the [design system](docs/DESIGN.md) for layout, accessibility, and implementation details.
+Select a language and a sun/moon theme button in the top bar. Changes apply immediately and persist across restarts. A new profile starts in Russian with the system's current light/dark preference. Existing theme preferences from 0.2.0 are retained; research data is preserved. See the [design system](docs/DESIGN.md) and [localization guide](docs/LOCALIZATION.md).
+
+Original generated glass Ethereum artwork illustrates the model panel. A generated crystalline X icon identifies the Windows executable, application window, sidebar, and browser tab. Both assets load locally without an image service. Decorative charts in the artwork are not market data.
+
+![Light theme with the English interface](docs/images/overview-light.png)
 
 ## What works
 
@@ -51,11 +53,11 @@ For browser-based local verification, run `npm run dev:web` and open `http://127
 
 ## First experiment
 
-1. Open **Данные** and click **Загрузить данные Bybit**. The initial dataset is synthetic and clearly labeled.
-2. Open **Обучение ИИ**. Choose a prediction horizon and movement threshold, then train.
+1. Select **English** in the top bar, open **Data**, and click **Import Bybit data**. The initial dataset is synthetic and clearly labeled.
+2. Open **AI training**. Choose a prediction horizon and movement threshold, then train.
 3. Compare test accuracy with the majority-class baseline; inspect validation loss. A better classification score alone does not establish trading profitability.
-4. Open **Симуляция**, review the execution assumptions and risk settings, and run the historical simulation.
-5. Inspect the equity curve and **Журнал сделок**. Export the full JSON report and CSV ledger for independent analysis.
+4. Open **Simulation**, review the execution assumptions and risk settings, and run the historical simulation.
+5. Inspect the equity curve and **Trade journal**. Export the full JSON report and CSV ledger for independent analysis.
 
 The default 0.50 probability threshold can produce zero trades. That is a valid outcome when the model mostly predicts the flat class. Lowering it changes the experiment; it is not evidence of a better strategy. Repeatedly tuning parameters against the same test interval consumes that interval's usefulness as an independent test.
 
@@ -65,12 +67,12 @@ Loading a new dataset resets the current model and its simulations. Retraining r
 
 ```powershell
 npm run check        # Svelte + TypeScript diagnostics
-npm run test         # 17 C# checks + 4 client/Electron regression checks
+npm run test         # 17 C# checks + 6 client/Electron/localization checks
 npm run build        # UI, Electron bridge, C# service
 npm run package      # Windows x64 portable application, including .NET runtime
 ```
 
-Output: `release/Xkiller-0.2.0-x64.exe`. This build is unsigned. `release/win-unpacked/Xkiller.exe` is the unpacked application. GitHub Actions performs checks and uploads the portable executable as a workflow artifact.
+Output: `release/Xkiller-0.2.1-x64.exe`. This build is unsigned. `release/win-unpacked/Xkiller.exe` is the unpacked application. GitHub Actions performs checks and uploads the portable executable as a workflow artifact.
 
 To publish a new version, update `package.json` and its lockfile, add English notes at `docs/releases/<version>.md`, verify locally, commit, and push a matching `v<version>` tag. The release workflow validates the version, runs all tests and type checks, packages Windows x64, computes SHA-256, and publishes both assets using the repository's built-in `GITHUB_TOKEN`. No personal access token is required. Actions must be enabled and permitted to write releases.
 
@@ -79,7 +81,7 @@ To publish a new version, update `package.json` and its lockfile, add English no
 - Development: `.local/workspace/workspace.json`.
 - Packaged Electron: a `workspace` directory below Electron's `userData` location (normally `%APPDATA%\xkiller` or `%APPDATA%\Xkiller`).
 - `XKILLER_DATA` overrides the workspace directory for isolated verification.
-- Desktop appearance: `preferences.json` directly below Electron's `userData` directory. Theme writes are serialized and use atomic replacement. Missing or malformed appearance settings fall back to the system theme without touching research data.
+- Theme and language are stored separately in `userData/preferences.json`. Legacy theme-only files migrate on the next preference change. Browser development uses local storage. Appearance settings never replace market history or model data.
 - The workspace contains market history, funding, model parameters, risk settings, and simulation runs. Writes use a temporary file and atomic replacement; malformed existing files are preserved and cause startup to fail rather than silently resetting research.
 - Nothing in `.local/`, `artifacts/`, `release/`, or dependency folders is committed.
 
@@ -90,6 +92,9 @@ backend/Xkiller.Core/    Market data, indicators, training, simulation
 backend/Xkiller.Api/     Local API, cancellable jobs, persistence
 electron/               Process lifecycle, validated IPC, native exports
 src/                    Svelte UI and reusable chart components
+shared/                 Preference validation and locale-aware translation
+build/                  Generated icon source and Windows ICO
+public/                 Local UI and browser icon
 scripts/                Development and packaging orchestration
 tests/Xkiller.Tests/     Deterministic scientific and accounting checks
 docs/                   Architecture, methodology, verification record

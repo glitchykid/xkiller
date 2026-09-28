@@ -1,6 +1,7 @@
 <script lang="ts">
+  import { t } from './i18n.svelte';
   import type { Candle } from './types';
-  import { money, time } from './api';
+  import { money, time } from './format.svelte';
   let { candles }: { candles: Candle[] } = $props();
   let selected = $state<number | null>(null);
   let low = $derived(Math.min(...candles.map((c) => c.low)) * 0.999);
@@ -25,14 +26,14 @@
 <div class="price-chart">
   <div class="ohlc">
     {#if selected !== null && candles[selected]}{@const c = candles[selected]}<span
-        >{time(c.time)} UTC</span
+        >{time(c.time)} {t('UTC')}</span
       ><span>O <b>{money(c.open)}</b></span><span>H <b>{money(c.high)}</b></span><span
         >L <b>{money(c.low)}</b></span
       ><span>C <b>{money(c.close)}</b></span>{:else}<span
-        ><i class="legend-dot accent"></i> EMA 26</span
-      ><span>Наведите на свечу для деталей</span>{/if}
+        ><i class="legend-dot accent"></i> {t('EMA 26')}</span
+      ><span>{t('Наведите на свечу для деталей')}</span>{/if}
   </div>
-  <svg viewBox="0 0 910 360" role="img" aria-label="Свечной график ETH с EMA 26 и объёмом">
+  <svg viewBox="0 0 910 360" role="img" aria-label={t('Свечной график ETH с EMA 26 и объёмом')}>
     {#each [0, 1, 2, 3, 4] as tick}{@const value = high - ((high - low) * tick) / 4}<line
         x1="8"
         x2="820"

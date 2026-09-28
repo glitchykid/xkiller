@@ -135,8 +135,10 @@ declare global {
     xkiller?: {
       request: (action: string, payload?: unknown) => Promise<unknown>;
       export: (kind: string) => Promise<boolean>;
-      getTheme: () => Promise<import('./theme').Theme>;
-      setTheme: (theme: import('./theme').Theme) => Promise<import('./theme').Theme>;
+      getPreferences: () => Promise<import('../../shared/preferences').Preferences>;
+      setPreferences: (
+        value: import('../../shared/preferences').Preferences,
+      ) => Promise<import('../../shared/preferences').Preferences>;
     };
   }
 }

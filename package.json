@@ -1,6 +1,6 @@
 {
   "name": "xkiller",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "private": true,
   "description": "ETH perpetual futures learning and simulation lab",
   "author": "glitchykid",
@@ -51,7 +51,8 @@
       "target": [
         "portable"
       ],
-      "signAndEditExecutable": false
+      "signExecutable": false,
+      "icon": "build/icon.ico"
     },
     "artifactName": "Xkiller-${version}-${arch}.${ext}"
   },

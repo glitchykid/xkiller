@@ -5,7 +5,8 @@ import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
 import { isTrustedDocument } from './trust';
-import { readTheme, writeTheme } from './preferences';
+import { readPreferences, writePreferences } from './preferences';
+import { themeBackground } from '../shared/preferences';
 
 let backend: ChildProcess | undefined;
 let backendUrl = '';
@@ -98,27 +99,27 @@ else
       );
       session.defaultSession.setPermissionCheckHandler(() => false);
       const preferencesDirectory = app.getPath('userData');
-      let theme = await readTheme(
-        preferencesDirectory,
-        nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
-      );
-      nativeTheme.themeSource = theme;
-      await startBackend();
-      ipcMain.handle('theme:get', (event) => {
-        trusted(event);
-        return theme;
+      let preferences = await readPreferences(preferencesDirectory, {
+        theme: nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
+        locale: 'ru',
       });
-      let pendingTheme = Promise.resolve();
-      ipcMain.handle('theme:set', (event, value: unknown) => {
+      nativeTheme.themeSource = preferences.theme;
+      await startBackend();
+      ipcMain.handle('preferences:get', (event) => {
         trusted(event);
-        const update = pendingTheme.then(async () => {
-          theme = await writeTheme(preferencesDirectory, value);
-          nativeTheme.themeSource = theme;
+        return preferences;
+      });
+      let pendingPreferences = Promise.resolve();
+      ipcMain.handle('preferences:set', (event, value: unknown) => {
+        trusted(event);
+        const update = pendingPreferences.then(async () => {
+          preferences = await writePreferences(preferencesDirectory, value);
+          nativeTheme.themeSource = preferences.theme;
           for (const window of BrowserWindow.getAllWindows())
-            window.setBackgroundColor(theme === 'dark' ? '#141611' : '#f4f3ed');
-          return theme;
+            window.setBackgroundColor(themeBackground(preferences.theme));
+          return preferences;
         });
-        pendingTheme = update.then(
+        pendingPreferences = update.then(
           () => {},
           () => {},
         );
@@ -144,8 +145,9 @@ else
         height: 960,
         minWidth: 1024,
         minHeight: 720,
-        backgroundColor: theme === 'dark' ? '#141611' : '#f4f3ed',
+        backgroundColor: themeBackground(preferences.theme),
         title: 'Xkiller — ETH Research Lab',
+        icon: join(__dirname, '../dist/icon.png'),
         autoHideMenuBar: true,
         webPreferences: {
           preload: join(__dirname, 'preload.cjs'),

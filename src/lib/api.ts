@@ -9,8 +9,8 @@ export async function request<T>(action: string, payload?: unknown): Promise<T> 
     signal: AbortSignal.timeout(15000),
   });
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Сервис недоступен' }));
-    throw new Error(error.error || `Ошибка ${response.status}`);
+    const error = await response.json().catch(() => ({ error: 'Service unavailable' }));
+    throw new Error(error.error || `HTTP ${response.status}`);
   }
   return response.json();
 }
@@ -25,21 +25,3 @@ export async function exportFile(kind: string) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
   return true;
 }
-export const money = (v: number) =>
-  new Intl.NumberFormat('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v);
-export const pct = (v: number) => `${v > 0 ? '+' : ''}${v.toFixed(2)}%`;
-export const date = (v: number | string) =>
-  new Date(v).toLocaleDateString('ru-RU', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    timeZone: 'UTC',
-  });
-export const time = (v: number) =>
-  new Date(v).toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'UTC',
-  });

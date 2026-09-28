@@ -1,34 +1,34 @@
 # Design system
 
-Version 0.2.0 applies one brutalist visual system across overview, training, simulation, journal, data, and methodology. Research workflows and scientific calculations remain unchanged.
+Version 0.2.1 uses Glass Morphism in light and dark themes across overview, training, simulation, journal, data, and methodology. Research calculations remain independent of appearance.
 
 ## Visual language
 
-- Square corners, visible 1–2 px borders, hard offset shadows, and rectangular status markers.
-- Large uppercase Arial headings; Consolas/Courier New for market values and technical labels. System fonts keep the portable application fully offline.
-- Acid-lime action surfaces (`#d6ff38`) always use dark text. The light palette uses paper (`#f4f3ed`) and white panels; the dark palette uses graphite (`#141611`) and dark green-gray panels.
-- Semantic tokens in `src/styles.css` define surfaces, text, borders, positive/negative results, warnings, and chart lines. SVG charts consume the same CSS variables. The EMA line is distinct from bullish and bearish candle colors.
-- Charts use flat fills and grid lines. The model illustration presents the actual 24-feature / three-timeframe structure.
+- Translucent panels with 20 px backdrop blur, quiet edge highlights, rounded corners, and soft shadows.
+- A pearl-blue light canvas and a midnight-blue dark canvas, with restrained violet/cyan background gradients.
+- Semantic CSS variables for surfaces, borders, readable text, positive/negative results, warnings, and chart lines. EMA, rising candles, and falling candles use distinct colors in both palettes.
+- Segoe UI and system Japanese, Korean, and Chinese fallbacks; tabular market values use a system monospace family. No remote font requests are required.
+- Consistent grouped controls, generous panel spacing, concise labels, and visible focus outlines.
 
-## Interaction and accessibility
+The theme buttons and language selector live in the top bar. Selected buttons expose `aria-pressed`; navigation exposes the current page and keeps accessible labels when it contracts to icons. The initial theme follows the system, while a saved choice persists across restarts. Electron's native theme and background are set before window creation. Preference writes do not touch research data.
 
-The light/dark control is available before market data loads and on every page. Both buttons have explicit accessible names and `aria-pressed` state. Navigation exposes the current page and retains accessible labels when its text collapses into icons. Timeframe and trade filters expose selection state. Keyboard focus has a visible outline; reduced-motion preference disables the loading animation. Text and numerical signs accompany semantic colors.
+## Generated identity assets
 
-The desktop window supports a minimum size of 1024 × 720. At smaller browser widths, panels stack, navigation contracts, and wide trade tables scroll inside their own container. Charts and forms keep their data density without forcing the whole page to scroll horizontally.
+`src/assets/eth-research-glass.png` is an original generated Ethereum crystal above three frosted data sheets. Its alpha channel lets the scene sit naturally on either palette. The decorative illustration is excluded from the accessibility tree; actual feature counts and timeframe labels remain selectable interface text. Illustrated charts are not market observations.
 
-Verified layouts: [simulation](images/simulation-dark.png), [1024 px simulation](images/simulation-compact.png), [trade journal](images/journal-dark.png), [760 px data screen](images/data-compact.png), and [light methodology](images/method-light.png). The README shows both overview themes.
+`build/icon-source.png` is the original generated crystalline X mark. `build/icon.ico` contains 16, 24, 32, 48, 64, 128, and 256 px variants for Windows. `public/icon.png` is the 256 px version used for the window, sidebar, and favicon. Run `node node_modules/electron/cli.js scripts/generate-icons.cjs` after replacing the source to encode both outputs with alpha preserved. Generated outputs are committed, so ordinary builds do not need image generation or icon conversion.
 
-## Preference lifecycle
+Electron Builder applies icon and version resources while `signExecutable: false` explicitly leaves the build unsigned. This is separate from the removed `signAndEditExecutable: false` setting, which would also suppress the application icon.
 
-1. Electron reads `preferences.json` from `app.getPath('userData')`. Without a valid saved theme it uses `nativeTheme.shouldUseDarkColors`.
-2. The renderer retrieves the preference through a narrow, trusted-sender IPC handler before mounting Svelte. The first mounted interface therefore uses the saved theme.
-3. Selecting a theme validates the value, serializes native writes, atomically replaces the preference file, updates `nativeTheme.themeSource` and the window background, then updates renderer CSS tokens.
-4. A failed save leaves the active theme unchanged and shows a retry message. Malformed appearance files do not reset or alter the research workspace.
+## Responsive behavior and accessibility
 
-The browser development fallback uses local storage and the system color preference. Native storage intentionally takes precedence over local storage: a portable application can have a different temporary `file:` origin on each launch.
+The desktop minimum is 1024 × 720. At smaller browser widths, panels stack, navigation contracts, and trade tables scroll inside their own container. The language and theme controls remain available. Reduced-motion preference disables animations and transitions. Results have signs and labels as well as semantic colors.
+
+Verified views: [dark overview](images/overview.png), [light overview](images/overview-light.png), [compact simulation](images/simulation-compact.png), [trade journal](images/journal.png), [compact Chinese data page](images/data-compact.png), [Ukrainian training](images/training-uk.png), and [Japanese methodology](images/method.png).
 
 ## References
 
-- [Svelte 5 state](https://svelte.dev/docs/svelte/$state) and [untrack](https://svelte.dev/docs/svelte/svelte#untrack).
-- [Electron nativeTheme](https://www.electronjs.org/docs/latest/api/native-theme) and [context isolation](https://www.electronjs.org/docs/latest/tutorial/context-isolation).
-- [Svelte Check](https://github.com/sveltejs/language-tools/tree/master/packages/svelte-check) for the current TypeScript API compatibility boundary.
+- [Svelte 5 state](https://svelte.dev/docs/svelte/$state) and [derived values](https://svelte.dev/docs/svelte/$derived).
+- [Electron nativeTheme](https://www.electronjs.org/docs/latest/api/native-theme), [nativeImage](https://www.electronjs.org/docs/latest/api/native-image), and [context isolation](https://www.electronjs.org/docs/latest/tutorial/context-isolation).
+- [Electron Builder Windows configuration](https://www.electron.build/win/).
+- [Localization implementation](LOCALIZATION.md).
