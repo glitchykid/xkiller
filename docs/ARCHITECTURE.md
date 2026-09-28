@@ -42,6 +42,10 @@ Presentation is a separate UI concern. Shared validators restrict preferences to
 
 ## Persistence and process lifecycle
 
+Internal view selection, unsaved form values and table pages are renderer state. `Tabs.svelte` owns accessible keyboard navigation; `Pager.svelte` renders the shared page controls. The pure `paginate` helper clamps indices without losing records when the available row count changes. Svelte's dimension binding observes the content area so table capacity responds to window size and status bars. These presentation changes do not modify the API payloads, workspace schema or research calculations.
+
+Job completion detection accounts for the operation currently being submitted, so a first job that finishes before the next poll still opens its result view. Repeated snapshots of the same completed job do not trigger another transition; an initially restored result does not count as a new completion.
+
 `workspace.json` version 1 stores a single dataset/model workspace and at most 20 complete simulation runs. Dataset identity is a truncated SHA-256 of candles and funding, so a model cannot run against a different dataset. Model JSON contains normalization parameters, weights, temporal split boundaries, options, loss curves, and metrics. Exported reports include source/dataset identity and full simulation inputs/results.
 
 Electron launches an actual sidecar executable or DLL (not a `dotnet run` process tree). The sidecar reports its ephemeral port over stdout. Electron kills the child on application exit; the child also watches the parent PID to avoid remaining active after an unexpected parent exit. An initial desktop startup failure is reported in an error dialog.

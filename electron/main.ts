@@ -137,8 +137,8 @@ else
         return true;
       });
       const win = new BrowserWindow({
-        width: 1480,
-        height: 960,
+        width: 1180,
+        height: 760,
         minWidth: 1024,
         minHeight: 720,
         backgroundColor: windowBackground,

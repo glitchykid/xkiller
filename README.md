@@ -14,11 +14,13 @@ Download the Windows x64 portable executable from [GitHub Releases](https://gith
 
 Every screen uses a **compact, dark minimalist interface** with **Gunmetal (`#2A3439`) as its primary color**. Opaque panels, fine borders and clear typography organize research data. Quiet sage actions and subdued green/rose results provide useful emphasis. Blue accents, neon lighting, glass blur and decorative wallpaper are absent.
 
-Short headers, restrained spacing, small controls and dense forms and tables keep the workspace compact. The model panel presents its status and research details directly. Visual identity comes from the generated minimal X icon and consistent layout; there is no large decorative illustration competing with the charts.
+Short headers, 8 px gaps, 30 px controls and dense forms keep the workspace compact. Each section has internal tabs, so its content fits the supported desktop window without scrolling. The default window is 1180 × 760; the minimum is 1024 × 720. The layout is also verified with a 1024 × 660 renderer area to allow for native window chrome. Below 1200 px, navigation contracts to an icon rail with accessible names and hover labels.
+
+Training separates settings, quality and feature weights. Simulation separates settings, results and experiment history. The trade journal separates execution details from costs and exit reasons. Tables use pages sized to the available height; every record remains available, and CSV export still contains the complete ledger. Form values survive tab changes. Arrow keys, Home and End navigate the internal tabs. Visual identity comes from the generated minimal X icon and consistent Gunmetal surfaces.
 
 Select a language in the top bar; it applies immediately and persists across restarts. A new profile starts in Russian. The app stays dark regardless of the OS or earlier light-theme settings, while preserving language and research data. See the [design system](docs/DESIGN.md) and [localization guide](docs/LOCALIZATION.md).
 
-A generated flat X monogram on Gunmetal identifies the Windows executable, window, sidebar and browser tab. Its sage and off-white geometry remains legible at small sizes and is bundled locally. [Asset locations and the generation prompt](docs/ASSETS.md) document the visual identity.
+A generated flat X monogram on opaque Gunmetal identifies the Windows executable, window, sidebar and browser tab. Inside the app, sixteen generated raster PNG glyphs have transparent backgrounds and antialiased edges; no SVG icons are used. Charts use smooth geometric rendering. All graphics are bundled locally. [Asset locations and generation prompts](docs/ASSETS.md) document the visual identity.
 
 ## What works
 
@@ -55,9 +57,9 @@ For browser-based local verification, run `npm run dev:web` and open `http://127
 
 1. Select **English** in the top bar, open **Data**, and click **Import Bybit data**. The initial dataset is synthetic and clearly labeled.
 2. Open **AI training**. Choose a prediction horizon and movement threshold, then train.
-3. Compare test accuracy with the majority-class baseline; inspect validation loss. A better classification score alone does not establish trading profitability.
+3. Training opens the **Quality** tab when complete. Compare test accuracy with the majority-class baseline and inspect validation loss; **Features** shows model weights. A better classification score alone does not establish trading profitability.
 4. Open **Simulation**, review the execution assumptions and risk settings, and run the historical simulation.
-5. Inspect the equity curve and **Trade journal**. Export the full JSON report and CSV ledger for independent analysis.
+5. The completed simulation opens **Result**. Inspect its equity curve, **History**, and **Trade journal** pages. Export the full JSON report and CSV ledger for independent analysis.
 
 The default 0.50 probability threshold can produce zero trades. That is a valid outcome when the model mostly predicts the flat class. Lowering it changes the experiment; it is not evidence of a better strategy. Repeatedly tuning parameters against the same test interval consumes that interval's usefulness as an independent test.
 
@@ -67,12 +69,12 @@ Loading a new dataset resets the current model and its simulations. Retraining r
 
 ```powershell
 npm run check        # Svelte + TypeScript diagnostics
-npm run test         # 17 C# checks + 6 client/Electron/localization checks
+npm run test         # 17 C# + 9 client checks + 2 raster asset checks
 npm run build        # UI, Electron bridge, C# service
 npm run package      # Windows x64 portable application, including .NET runtime
 ```
 
-Output: `release/Xkiller-0.2.3-x64.exe`. This build is unsigned. `release/win-unpacked/Xkiller.exe` is the unpacked application. GitHub Actions performs checks and uploads the portable executable as a workflow artifact.
+Output: `release/Xkiller-0.2.4-x64.exe`. This build is unsigned. `release/win-unpacked/Xkiller.exe` is the unpacked application. GitHub Actions performs checks and uploads the portable executable as a workflow artifact.
 
 To publish a new version, update `package.json` and its lockfile, add English notes at `docs/releases/<version>.md`, verify locally, commit, and push a matching `v<version>` tag. The release workflow validates the version, runs all tests and type checks, packages Windows x64, computes SHA-256, and publishes both assets using the repository's built-in `GITHUB_TOKEN`. No personal access token is required. Actions must be enabled and permitted to write releases.
 
@@ -101,6 +103,8 @@ docs/                   Architecture, methodology, verification record
 ```
 
 Read [architecture](docs/ARCHITECTURE.md), [methodology and limitations](docs/METHODOLOGY.md), and [verification](docs/VERIFICATION.md) before interpreting results.
+
+Follow the [TDD development workflow and boundary checklist](docs/DEVELOPMENT.md) for new behavior and fixes.
 
 ## Scope and limitations
 

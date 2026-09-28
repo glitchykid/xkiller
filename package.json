@@ -1,6 +1,6 @@
 {
   "name": "xkiller",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "private": true,
   "description": "ETH perpetual futures learning and simulation lab",
   "author": "glitchykid",
@@ -13,7 +13,8 @@
     "build:ui": "vite build && node scripts/build-electron.mjs",
     "build": "npm run check && npm run build:ui && dotnet build backend/Xkiller.Api -c Release",
     "test:client": "node --test tests/client.test.mjs",
-    "test": "npm run test:client && dotnet run --project tests/Xkiller.Tests -c Release",
+    "test:assets": "node node_modules/electron/cli.js tests/icon-assets.cjs",
+    "test": "npm run test:client && npm run test:assets && dotnet run --project tests/Xkiller.Tests -c Release",
     "package": "npm run check && npm run build:ui && node scripts/package.mjs"
   },
   "devDependencies": {

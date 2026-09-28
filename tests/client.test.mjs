@@ -11,6 +11,18 @@ async function loadModule(path) {
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`);
 }
 
+test('release metadata agrees with the app version and pinned registry artifacts', async () => {
+  const manifest = JSON.parse(await readFile('package.json', 'utf8'));
+  const lock = JSON.parse(await readFile('package-lock.json', 'utf8'));
+  assert.equal(lock.version, manifest.version);
+  assert.equal(lock.packages[''].version, manifest.version);
+  for (const [path, entry] of Object.entries(lock.packages)) {
+    if (!entry.resolved?.startsWith('https://registry.npmjs.org/')) continue;
+    const artifact = decodeURIComponent(new URL(entry.resolved).pathname);
+    assert.ok(artifact.endsWith(`-${entry.version}.tgz`), `${path}: version ${entry.version} disagrees with ${artifact}`);
+  }
+});
+
 test('legacy themes are discarded while language and safe fallbacks are retained', async () => {
   const { normalizePreferences, validatePreferences } = await loadModule('shared/preferences.ts');
   const fallback = { locale: 'ru' };
@@ -48,7 +60,7 @@ test('language persists without legacy theme fields or changes to research data'
 
 test('every statically translated UI message exists in all six locales', async () => {
   const { messages } = await loadModule('src/lib/messages.ts');
-  for (const path of ['src/App.svelte', 'src/lib/PriceChart.svelte', 'src/lib/LineChart.svelte', 'src/lib/AppearanceControls.svelte']) {
+  for (const path of ['src/App.svelte', 'src/lib/PriceChart.svelte', 'src/lib/LineChart.svelte', 'src/lib/AppearanceControls.svelte', 'src/lib/Pager.svelte', 'src/lib/Tabs.svelte']) {
     const ast = parse(await readFile(path, 'utf8'), { modern: true });
     function visit(node) {
       if (!node || typeof node !== 'object') return;
@@ -67,6 +79,35 @@ test('every statically translated UI message exists in all six locales', async (
       assert.deepEqual(placeholders(text), placeholders(translations[0]), key);
     }
   }
+});
+
+test('job completion handles instant first jobs without replaying saved or repeated results', async () => {
+  const { jobKey, completedJob } = await loadModule('src/lib/jobs.ts');
+  const done = { id: 'job-1', kind: 'simulate', status: 'completed' };
+  assert.equal(completedJob('', done, 'simulate'), true, 'a submitted job may complete before the first poll');
+  assert.equal(completedJob('', done, ''), false, 'loading a saved result is not a new completion');
+  assert.equal(completedJob('', done, 'train'), false, 'an unrelated operation must not trigger the result view');
+  assert.equal(completedJob('job-1:running', done, ''), true);
+  assert.equal(completedJob(jobKey(done), done, 'simulate'), false, 'polling must not repeat completion');
+  for (const status of ['running', 'failed', 'cancelled'])
+    assert.equal(completedJob('job-1:running', { ...done, status }, 'simulate'), false);
+  assert.equal(completedJob('job-1:running', null, 'simulate'), false);
+  assert.equal(completedJob(jobKey(done), { ...done, id: 'job-2' }, ''), true);
+});
+
+test('pagination retains every record and clamps after filtering or resizing', async () => {
+  const { paginate } = await loadModule('src/lib/pagination.ts');
+  const records = Array.from({ length: 14 }, (_, id) => ({ id }));
+  for (const size of [1, 7, 9, 16]) {
+    const { pages } = paginate(records, 0, size);
+    const all = Array.from({ length: pages }, (_, page) => paginate(records, page, size).items).flat();
+    assert.deepEqual(all, records);
+  }
+  assert.deepEqual(paginate(records, 99, 9).items, records.slice(9));
+  assert.equal(paginate(records.slice(0, 3), 1, 9).page, 0);
+  assert.equal(paginate(records, 1, 16).page, 0);
+  assert.deepEqual(paginate([], 8, 9), { page: 0, pages: 1, total: 0, start: 0, items: [] });
+  assert.deepEqual(paginate(records, -1, 0).items, [records[0]]);
 });
 
 test('localization substitutes values and preserves unknown diagnostic details', async () => {

@@ -29,9 +29,29 @@ Verified locally on Windows x64 on 2026-09-28. This record describes functional 
 
 - A second client regression check verifies that filesystem aliases resolve to the same trusted packaged document, while other archives, other documents, remote URLs, and modified URLs are rejected. This addresses Windows portable extraction paths without weakening sender checks.
 
-Four additional client checks cover legacy/malformed preference migration, persistence without changing research data, static translation coverage in all six languages, matching placeholders, interpolation, and diagnostic fallbacks. Run `npm run test` for all 23 current checks. These are meaningful invariants and demonstrated integration regressions; no claim of exhaustive correctness is made.
+Four additional client checks cover legacy/malformed preference migration, persistence without changing research data, static translation coverage in all six languages, matching placeholders, interpolation, and diagnostic fallbacks. A pagination check verifies complete, nonduplicated traversal across different capacities, partial and exact last pages, empty lists, clamping after filtering/resizing, and defensive bounds. A release metadata check compares root versions and each registry artifact with its declared version. Two native-image checks inspect every raster icon's alpha channel for transparent gutters, visible content and antialiased edges, and verify the app icon is completely opaque. A job-completion regression check covers instant first operations, saved results, repeated polling and unsuccessful job states. Run `npm run test` for all 28 current checks. These are meaningful invariants and demonstrated integration regressions; no claim of exhaustive correctness is made.
 
 ## UI and integration
+
+### Version 0.2.4 viewport-fitting layout
+
+All 28 automated checks passed. Translation coverage now includes the shared pager and tabs. Research calculations are unchanged.
+
+All 15 internal views were inspected in all six languages at 1024 × 660, 1180 × 700 and 1480 × 900 renderer sizes: 270 combinations. Document width/height, descendant bounds, internal horizontal overflow and form validity were checked. Every document matched its viewport height, with no page or table scrolling, clipped controls, horizontal overflow, invalid form values or unexpected Russian labels in English/Korean/Japanese/Chinese content. The layout uses available height, tabs and pagination rather than hidden overflow.
+
+At 1024 × 660, the same 90 combinations passed with a running job, 100 trade records and 20 history entries, then another 90 passed with a synthetic dataset and no model or results. These additional states were isolated browser fixtures; they did not change the saved workspace.
+
+Interaction checks confirmed that all eleven risk fields survived tab navigation, an edited balance remained intact, Arrow/Home/End moved focus and selection together, all 14 actual trade records appeared across two pages without omission or duplication, background polling retained the selected page, switching journal views retained it, and a side filter reset it. No browser runtime errors were reported. Compact overview, settings, results, journal, Chinese import, Ukrainian training quality and Japanese methodology screenshots were refreshed.
+
+The development guide requires a failing behavior test before new implementation or fixes, followed by the smallest correction and refactoring with passing tests.
+
+The release-metadata test first reproduced an accidentally changed transitive dependency version; correcting that entry made it pass. The raster-asset tests first failed for the absent atlas, then detected unequal source cells before the generated artwork was packed into equal cells. They now confirm all sixteen transparent glyphs and the completely opaque application icon. The renderer exposes PNG alpha masks for icons, zero SVG icons in controls/navigation, `geometricPrecision` chart rendering and an antialiased text preference.
+
+An instant-completion browser fixture reproduced a first simulation finishing before the initial job poll while the settings view stayed open. A regression test reproduced the same completion-detection failure. Tracking the submitted operation now recognizes that completion while suppressing saved, unrelated, repeated, running, failed and cancelled job states; the browser scenario passes after the fix.
+
+The unpacked Electron application restored Japanese, dataset `581E2C4999547CDB`, model `c9f1ce81` and four existing runs. The 512 px raster atlas decoded from the packaged archive. The default native window measured 1180 × 760, with a 1164 × 721 renderer. At the native minimum of 1024 × 720, all 90 language/view combinations passed in the actual 1008 × 681 content area without overflow. A historical simulation launched from the Russian UI completed with 14 trades, opened the result tab automatically and saved a fifth run in the isolated verification workspace. Renderer Node access remained unavailable, with no alerts or runtime errors.
+
+The final portable EXE then launched from its actual temporary extraction directory. It restored Russian, the same dataset/model and all five runs, including the latest 14-trade result. Its raster atlas decoded at 512 × 512 from the local archive, and controls/navigation contained no SVG icons. The saved history was accessible, the document matched the viewport, and there were no alerts or runtime errors. An independent SHA-256 matched the packaged checksum. Svelte/TypeScript reported zero errors and warnings, and the final production UI and self-contained .NET service built successfully. The executable is unsigned.
 
 ### Version 0.2.3 dark minimalist interface
 
