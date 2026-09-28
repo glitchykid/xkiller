@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dist-electron/
+release/
+artifacts/
+**/bin/
+**/obj/
+.local/
+.env
+*.log
+.DS_Store

@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-electron
+release
+artifacts
+.local
+package-lock.json
+backend
+tests
