@@ -33,6 +33,16 @@ Four additional client checks cover legacy/malformed preference migration, persi
 
 ## UI and integration
 
+### Version 0.2.2 compact dark cyberpunk interface
+
+All 23 automated checks passed; Svelte/TypeScript reported zero errors and warnings. Preference checks now verify that legacy light/dark fields are discarded while language survives, and that locale-only saves leave research data untouched.
+
+All six pages were inspected in all six locales at 1024 px (36 combinations): no page-level horizontal overflow, invalid form values, or unexpected Russian labels in English/Korean/Japanese/Chinese content. The renderer remained dark in every case. The compact overview was visually inspected at 1480 × 960 with a full document height of 1177 px. Compact simulation and Japanese methodology were inspected at 1024 px; the Chinese data page at 760 px. Generated imagery, green/fuchsia candles, orchid chart lines, lime actions, and blurred glass surfaces were visible. No browser runtime errors were reported.
+
+A browser profile containing both the legacy light-theme key and a light/Japanese preference object still opened dark, retained Japanese, and exposed no theme switch. The unpacked Windows build also restored Japanese from a legacy light preference file. The generated background decoded locally at 1672 px wide, the panels retained their 64% dark fill, and the icon and Ethereum illustration loaded from bundled assets. The dataset 581E2C4999547CDB, model c9f1ce81, and four earlier runs were preserved. Changing language to English persisted only the locale. Renderer Node access remained unavailable.
+
+The actual portable EXE was launched from its temporary extraction directory. It restored English, the same model, and all four runs. The 1672 px background, 1536 px illustration, and 256 px icon loaded from the packaged local archive. Changing to Russian persisted a locale-only preference file and kept the renderer dark. No runtime errors, alerts, or page-level horizontal overflow were reported; renderer Node access remained unavailable. All seven ICO variants matched the icon resources embedded in both the unpacked application and portable launcher byte-for-byte. An independent SHA-256 calculation matched the packaged checksum. The executable is unsigned.
+
 ### Version 0.2.1 glass interface, localization, and icons
 
 All six pages were exercised in Russian, English, Ukrainian, Korean, Japanese, and Simplified Chinese at a 1024 px browser width. Forms passed native validity checks and there was no page-level horizontal overflow in any of the 36 combinations. The English, Korean, Japanese, and Chinese main content contained no leftover Russian labels. Both palettes were visually inspected at 1480 px; dark simulation and Japanese methodology were inspected at 1024 px and the light Chinese data page at 760 px. Browser reload restored the selected Chinese locale and light theme. No browser runtime errors were reported.

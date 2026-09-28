@@ -11,31 +11,32 @@ async function loadModule(path) {
   return import(`data:text/javascript;base64,${Buffer.from(result.outputFiles[0].text).toString('base64')}`);
 }
 
-test('legacy and damaged preferences retain valid fields and use safe fallbacks', async () => {
+test('legacy themes are discarded while language and safe fallbacks are retained', async () => {
   const { normalizePreferences, validatePreferences } = await loadModule('shared/preferences.ts');
-  const fallback = { theme: 'light', locale: 'ru' };
-  assert.deepEqual(normalizePreferences({ theme: 'dark' }, fallback), { theme: 'dark', locale: 'ru' });
-  assert.deepEqual(normalizePreferences({ theme: 'invalid', locale: 'ko' }, fallback), { theme: 'light', locale: 'ko' });
+  const fallback = { locale: 'ru' };
+  assert.deepEqual(normalizePreferences({ theme: 'light' }, fallback), { locale: 'ru' });
+  assert.deepEqual(normalizePreferences({ theme: 'light', locale: 'ko' }, fallback), { locale: 'ko' });
   assert.deepEqual(normalizePreferences(null, fallback), fallback);
   assert.throws(() => validatePreferences({ theme: 'dark', locale: '../../file' }));
-  assert.throws(() => validatePreferences({ theme: 'system', locale: 'en' }));
-  assert.deepEqual(validatePreferences({ theme: 'dark', locale: 'ja', ignored: true }), { theme: 'dark', locale: 'ja' });
+  assert.throws(() => validatePreferences({ theme: 'dark' }));
+  assert.deepEqual(validatePreferences({ theme: 'light', locale: 'ja', ignored: true }), { locale: 'ja' });
 });
 
-test('appearance persists both settings without changing the research workspace', async () => {
+test('language persists without legacy theme fields or changes to research data', async () => {
   const { readPreferences, writePreferences } = await loadModule('electron/preferences.ts');
   const base = resolve('.local');
   await mkdir(base, { recursive: true });
   const root = await mkdtemp(join(base, 'preferences-'));
-  const fallback = { theme: 'light', locale: 'ru' };
+  const fallback = { locale: 'ru' };
   try {
     await writeFile(join(root, 'workspace.json'), 'research-data-fixture');
-    await writeFile(join(root, 'preferences.json'), '{"theme":"dark"}');
-    assert.deepEqual(await readPreferences(root, fallback), { theme: 'dark', locale: 'ru' });
-    await writePreferences(root, { theme: 'light', locale: 'zh' });
-    assert.deepEqual(await readPreferences(root, fallback), { theme: 'light', locale: 'zh' });
-    await assert.rejects(writePreferences(root, { theme: 'invalid', locale: 'en' }));
-    assert.deepEqual(await readPreferences(root, fallback), { theme: 'light', locale: 'zh' });
+    await writeFile(join(root, 'preferences.json'), '{"theme":"light","locale":"ja"}');
+    assert.deepEqual(await readPreferences(root, fallback), { locale: 'ja' });
+    await writePreferences(root, { locale: 'zh' });
+    assert.deepEqual(await readPreferences(root, fallback), { locale: 'zh' });
+    assert.deepEqual(JSON.parse(await readFile(join(root, 'preferences.json'), 'utf8')), { locale: 'zh' });
+    await assert.rejects(writePreferences(root, { locale: 'invalid' }));
+    assert.deepEqual(await readPreferences(root, fallback), { locale: 'zh' });
     assert.equal(await readFile(join(root, 'workspace.json'), 'utf8'), 'research-data-fixture');
     await writeFile(join(root, 'preferences.json'), '{broken');
     assert.deepEqual(await readPreferences(root, fallback), fallback);

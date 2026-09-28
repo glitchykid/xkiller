@@ -1,34 +1,46 @@
 # Design system
 
-Version 0.2.1 uses Glass Morphism in light and dark themes across overview, training, simulation, journal, data, and methodology. Research calculations remain independent of appearance.
+Version 0.2.2 uses a compact, dark-only cyberpunk Glass Morphism interface with modern minimalist graphics. Scientific calculations are independent of presentation.
 
-## Visual language
+## Five-color palette
 
-- Translucent panels with 20 px backdrop blur, quiet edge highlights, rounded corners, and soft shadows.
-- A pearl-blue light canvas and a midnight-blue dark canvas, with restrained violet/cyan background gradients.
-- Semantic CSS variables for surfaces, borders, readable text, positive/negative results, warnings, and chart lines. EMA, rising candles, and falling candles use distinct colors in both palettes.
-- Segoe UI and system Japanese, Korean, and Chinese fallbacks; tabular market values use a system monospace family. No remote font requests are required.
-- Consistent grouped controls, generous panel spacing, concise labels, and visible focus outlines.
+| Role | Color | Hex | Use |
+| --- | --- | --- | --- |
+| Primary 1 | Warm graphite | `#120E17` | Canvas, window background, dark glass |
+| Primary 2 | Orchid purple | `#A84DE4` | Active navigation, glass illumination, instrument mark |
+| Supporting 1 | Fuchsia | `#F46CBA` | Secondary illumination, negative results and falling candles |
+| Supporting 2 | Emerald | `#65EDAD` | Positive results, rising candles, research labels |
+| Accent | Lime | `#D7FF4F` | Primary actions, selected-state accents and small highlights |
 
-The theme buttons and language selector live in the top bar. Selected buttons expose `aria-pressed`; navigation exposes the current page and keeps accessible labels when it contracts to icons. The initial theme follows the system, while a saved choice persists across restarts. Electron's native theme and background are set before window creation. Preference writes do not touch research data.
+Neutral text and lighter/darker variants support contrast; they are not additional brand colors. Blue, navy, and cyan are excluded. The EMA line uses a lighter orchid tint to separate it from both candle directions. Numerical signs and text accompany semantic colors.
 
-## Generated identity assets
+## Minimal graphics and visible glass
 
-`src/assets/eth-research-glass.png` is an original generated Ethereum crystal above three frosted data sheets. Its alpha channel lets the scene sit naturally on either palette. The decorative illustration is excluded from the accessibility tree; actual feature counts and timeframe labels remain selectable interface text. Illustrated charts are not market observations.
+The generated background has just a few large geometric planes and neon edges, with calm negative space. There is no busy cityscape, fake data, repeated circuitry, or continuous decorative animation. The image stays fixed behind the application and remains visible between panels. Panels use a 64% opaque dark fill, 20 px backdrop blur, thin translucent borders, restrained shadows, and rounded corners. Headers and the sidebar use their own dark translucent surfaces to keep navigation legible.
 
-`build/icon-source.png` is the original generated crystalline X mark. `build/icon.ico` contains 16, 24, 32, 48, 64, 128, and 256 px variants for Windows. `public/icon.png` is the 256 px version used for the window, sidebar, and favicon. Run `node node_modules/electron/cli.js scripts/generate-icons.cjs` after replacing the source to encode both outputs with alpha preserved. Generated outputs are committed, so ordinary builds do not need image generation or icon conversion.
+The generated X icon is a single recognizable mark. The model card's generated Ethereum illustration is displayed at 112 px high instead of dominating the research panel. These images are decorative, loaded locally, and do not represent market observations. [Asset locations and final prompts](ASSETS.md) record the generation workflow.
 
-Electron Builder applies icon and version resources while `signExecutable: false` explicitly leaves the build unsigned. This is separate from the removed `signAndEditExecutable: false` setting, which would also suppress the application icon.
+## Compact layout
 
-## Responsive behavior and accessibility
+- 58 px desktop top bar and 208 px navigation rail at full width.
+- 12–16 px gaps between major cards, smaller panel headings, and 36 px primary controls.
+- Tighter form rows, table cells, timeframe summaries, and model metadata.
+- A 112 px minimum page heading with an uncluttered title and action area.
+- A constrained price-chart height balances the chart with the compact model panel.
 
-The desktop minimum is 1024 × 720. At smaller browser widths, panels stack, navigation contracts, and trade tables scroll inside their own container. The language and theme controls remain available. Reduced-motion preference disables animations and transitions. Results have signs and labels as well as semantic colors.
+The desktop minimum remains 1024 × 720. At smaller browser widths, panels stack and navigation contracts; accessible labels remain present. Tables scroll within their own container. Long translations wrap without hiding important data. System fonts include Japanese, Korean, and Chinese fallbacks.
 
-Verified views: [dark overview](images/overview.png), [light overview](images/overview-light.png), [compact simulation](images/simulation-compact.png), [trade journal](images/journal.png), [compact Chinese data page](images/data-compact.png), [Ukrainian training](images/training-uk.png), and [Japanese methodology](images/method.png).
+## Interaction and persistence
+
+The app always renders dark, including the native window, controls, metadata, and initial canvas before mounting. There is no light palette or theme selector. The top-bar language selection applies immediately and persists independently of research data. Older light/dark settings are ignored, while a valid saved locale is retained.
+
+Keyboard focus remains visible. Reduced-motion preferences disable transitions and the progress spinner animation. Hover states use restrained surface changes, and status is never communicated only by color.
+
+Screenshots: [overview](images/overview.png), [compact overview](images/overview-compact.png), [compact simulation](images/simulation-compact.png), [trade journal](images/journal.png), [Chinese data page](images/data-compact.png), [Ukrainian training](images/training-uk.png), and [Japanese methodology](images/method.png).
 
 ## References
 
-- [Svelte 5 state](https://svelte.dev/docs/svelte/$state) and [derived values](https://svelte.dev/docs/svelte/$derived).
-- [Electron nativeTheme](https://www.electronjs.org/docs/latest/api/native-theme), [nativeImage](https://www.electronjs.org/docs/latest/api/native-image), and [context isolation](https://www.electronjs.org/docs/latest/tutorial/context-isolation).
+- [Electron nativeTheme](https://www.electronjs.org/docs/latest/api/native-theme) and [nativeImage](https://www.electronjs.org/docs/latest/api/native-image).
+- [CSS backdrop-filter](https://developer.mozilla.org/en-US/docs/Web/CSS/Reference/Properties/backdrop-filter).
 - [Electron Builder Windows configuration](https://www.electron.build/win/).
 - [Localization implementation](LOCALIZATION.md).

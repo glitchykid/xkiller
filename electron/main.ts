@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
 import { isTrustedDocument } from './trust';
 import { readPreferences, writePreferences } from './preferences';
-import { themeBackground } from '../shared/preferences';
+import { windowBackground } from '../shared/preferences';
 
 let backend: ChildProcess | undefined;
 let backendUrl = '';
@@ -100,10 +100,9 @@ else
       session.defaultSession.setPermissionCheckHandler(() => false);
       const preferencesDirectory = app.getPath('userData');
       let preferences = await readPreferences(preferencesDirectory, {
-        theme: nativeTheme.shouldUseDarkColors ? 'dark' : 'light',
         locale: 'ru',
       });
-      nativeTheme.themeSource = preferences.theme;
+      nativeTheme.themeSource = 'dark';
       await startBackend();
       ipcMain.handle('preferences:get', (event) => {
         trusted(event);
@@ -114,9 +113,6 @@ else
         trusted(event);
         const update = pendingPreferences.then(async () => {
           preferences = await writePreferences(preferencesDirectory, value);
-          nativeTheme.themeSource = preferences.theme;
-          for (const window of BrowserWindow.getAllWindows())
-            window.setBackgroundColor(themeBackground(preferences.theme));
           return preferences;
         });
         pendingPreferences = update.then(
@@ -145,7 +141,7 @@ else
         height: 960,
         minWidth: 1024,
         minHeight: 720,
-        backgroundColor: themeBackground(preferences.theme),
+        backgroundColor: windowBackground,
         title: 'Xkiller — ETH Research Lab',
         icon: join(__dirname, '../dist/icon.png'),
         autoHideMenuBar: true,

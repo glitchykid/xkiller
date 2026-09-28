@@ -38,7 +38,7 @@ The renderer has no Node integration, has context isolation and sandboxing enabl
 
 For development only, Vite can proxy requests to the sidecar using the token held in its process environment. This convenience endpoint must never be exposed to untrusted networks.
 
-Appearance is a separate UI concern. Shared validators restrict preferences to two themes and six locales. Electron serializes trusted `preferences:get` / `preferences:set` calls and atomically stores a small `preferences.json` alongside the research workspace. The Svelte preference store applies the saved theme, HTML language, and color scheme before mounting; its reactive locale drives translation and `Intl` formatting. Browser development uses local storage through the same store. See [localization](LOCALIZATION.md) for boundaries and extension rules.
+Presentation is a separate UI concern. Shared validators restrict preferences to six locales. Electron serializes trusted `preferences:get` / `preferences:set` calls and atomically stores the locale in `preferences.json` alongside the research workspace. The Svelte preference store applies the saved HTML language before mounting; its reactive locale drives translation and `Intl` formatting. Browser development uses local storage through the same store. The renderer and native window always use the dark palette; legacy theme fields are ignored. See [localization](LOCALIZATION.md) for boundaries and extension rules.
 
 ## Persistence and process lifecycle
 

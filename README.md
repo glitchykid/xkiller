@@ -4,7 +4,7 @@ A local research lab for learning and testing ETHUSDT perpetual futures strategi
 
 Xkiller trains a real, reproducible classifier on technical indicators, then simulates its decisions on a later section of history. It is a research application, not a proven profitable trading system. **No exchange credentials or real order submission are implemented.**
 
-![Xkiller dark glass workspace with imported Bybit data](docs/images/overview.png)
+![Xkiller compact dark cyberpunk workspace with imported Bybit data](docs/images/overview.png)
 
 ## Download
 
@@ -12,13 +12,13 @@ Download the Windows x64 portable executable from [GitHub Releases](https://gith
 
 ## Appearance
 
-Every screen uses **Glass Morphism in light and dark themes**: translucent panels, blurred surfaces, soft violet and cyan gradients, rounded controls, and restrained shadows. Charts, forms, tables, and the native Electron window follow the selected palette.
+Every screen uses a **compact, dark-only cyberpunk Glass Morphism interface**. Translucent panels blur a locally generated minimalist background of geometric glass planes and restrained neon edges. Shorter headers, tighter panel spacing, smaller artwork, and denser forms and tables put more research data on screen.
 
-Select a language and a sun/moon theme button in the top bar. Changes apply immediately and persist across restarts. A new profile starts in Russian with the system's current light/dark preference. Existing theme preferences from 0.2.0 are retained; research data is preserved. See the [design system](docs/DESIGN.md) and [localization guide](docs/LOCALIZATION.md).
+The five-color palette has two primary colors (warm graphite and orchid purple), two supporting colors (fuchsia and emerald), and one action accent (lime). Blue, navy, and cyan are excluded from the interface palette. Graphics use a few large forms instead of detailed scenery, repeated circuitry, or decorative data.
 
-Original generated glass Ethereum artwork illustrates the model panel. A generated crystalline X icon identifies the Windows executable, application window, sidebar, and browser tab. Both assets load locally without an image service. Decorative charts in the artwork are not market data.
+Select a language in the top bar; it applies immediately and persists across restarts. A new profile starts in Russian. The app stays dark regardless of the OS or earlier light-theme settings, while preserving language and research data. See the [design system](docs/DESIGN.md) and [localization guide](docs/LOCALIZATION.md).
 
-![Light theme with the English interface](docs/images/overview-light.png)
+Original generated Ethereum artwork illustrates the model panel. A generated purple/emerald crystalline X identifies the Windows executable, window, sidebar, and browser tab. All three assets are bundled locally. Decorative artwork is not market data. [Asset locations and generation prompts](docs/ASSETS.md) document the visual identity.
 
 ## What works
 
@@ -72,7 +72,7 @@ npm run build        # UI, Electron bridge, C# service
 npm run package      # Windows x64 portable application, including .NET runtime
 ```
 
-Output: `release/Xkiller-0.2.1-x64.exe`. This build is unsigned. `release/win-unpacked/Xkiller.exe` is the unpacked application. GitHub Actions performs checks and uploads the portable executable as a workflow artifact.
+Output: `release/Xkiller-0.2.2-x64.exe`. This build is unsigned. `release/win-unpacked/Xkiller.exe` is the unpacked application. GitHub Actions performs checks and uploads the portable executable as a workflow artifact.
 
 To publish a new version, update `package.json` and its lockfile, add English notes at `docs/releases/<version>.md`, verify locally, commit, and push a matching `v<version>` tag. The release workflow validates the version, runs all tests and type checks, packages Windows x64, computes SHA-256, and publishes both assets using the repository's built-in `GITHUB_TOKEN`. No personal access token is required. Actions must be enabled and permitted to write releases.
 
@@ -81,7 +81,7 @@ To publish a new version, update `package.json` and its lockfile, add English no
 - Development: `.local/workspace/workspace.json`.
 - Packaged Electron: a `workspace` directory below Electron's `userData` location (normally `%APPDATA%\xkiller` or `%APPDATA%\Xkiller`).
 - `XKILLER_DATA` overrides the workspace directory for isolated verification.
-- Theme and language are stored separately in `userData/preferences.json`. Legacy theme-only files migrate on the next preference change. Browser development uses local storage. Appearance settings never replace market history or model data.
+- Language is stored separately in `userData/preferences.json`. Legacy theme fields are ignored and removed on the next language save. Browser development uses local storage. Language settings never replace market history or model data.
 - The workspace contains market history, funding, model parameters, risk settings, and simulation runs. Writes use a temporary file and atomic replacement; malformed existing files are preserved and cause startup to fail rather than silently resetting research.
 - Nothing in `.local/`, `artifacts/`, `release/`, or dependency folders is committed.
 

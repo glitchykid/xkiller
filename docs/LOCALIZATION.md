@@ -4,7 +4,7 @@ The six supported locales are Russian (`ru`), English (`en`), Ukrainian (`uk`), 
 
 ## Runtime behavior
 
-`shared/preferences.ts` defines supported values, native names, and `Intl` locale mappings. The app starts in Russian for a new profile. The initial theme follows the operating system; an explicit saved theme takes precedence on subsequent starts.
+`shared/preferences.ts` defines supported locales, native names, and `Intl` locale mappings. The app starts in Russian for a new profile. Appearance is always dark; there is no theme preference or switch.
 
 `src/lib/messages.ts` contains one six-entry translation tuple per message, ordered like the locale registry. `shared/localization.ts` substitutes named placeholders while retaining unknown diagnostic details. `src/lib/i18n.svelte.ts` connects translation to the reactive Svelte preference store; derived navigation, headings, and form labels update immediately without a restart.
 
@@ -14,9 +14,9 @@ Navigation, forms, descriptions, help, chart accessibility labels, status labels
 
 ## Persistence
 
-Electron stores `{ "theme": "dark", "locale": "ja" }` in `preferences.json` under `userData`. The main process validates the sender and both values, serializes writes, and atomically replaces the file. Legacy theme-only preferences retain their theme and default to Russian; the next save writes both fields. Missing, malformed, and unsupported fields use safe defaults without blocking the research workspace.
+Electron stores `{ "locale": "ja" }` in `preferences.json` under `userData`. The main process validates the sender and locale, serializes writes, and atomically replaces the file. Legacy files retain a valid language but ignore their theme field, including a saved light choice. Theme-only files default to Russian. The next save writes only the locale. Missing, malformed, and unsupported fields use safe defaults without blocking the research workspace.
 
-The renderer applies a preference only after successful persistence. Save failures show a translated notification. Browser development uses `xkiller-preferences` in local storage and recognizes the earlier `xkiller-theme` key.
+The renderer applies a language only after successful persistence. Save failures show a translated notification. Browser development uses `xkiller-preferences` in local storage; the earlier `xkiller-theme` key has no effect.
 
 ## Updating translations
 

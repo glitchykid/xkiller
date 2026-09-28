@@ -29,20 +29,4 @@
       {#each locales as locale}<option value={locale}>{languageNames[locale]}</option>{/each}
     </select>
   </label>
-  <div class="theme-switch" role="group" aria-label={t('Тема оформления')}>
-    <button
-      aria-label={t('Светлая тема')}
-      title={t('Светлая тема')}
-      aria-pressed={appearance.theme === 'light'}
-      disabled={saving}
-      onclick={() => change({ theme: 'light' })}><Icon name="sun" size={17} /></button
-    >
-    <button
-      aria-label={t('Тёмная тема')}
-      title={t('Тёмная тема')}
-      aria-pressed={appearance.theme === 'dark'}
-      disabled={saving}
-      onclick={() => change({ theme: 'dark' })}><Icon name="moon" size={17} /></button
-    >
-  </div>
 </div>
