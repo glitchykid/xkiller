@@ -34,4 +34,4 @@ export function validatePreferences(value: unknown): Preferences {
   if (!isLocale(input.locale)) throw new Error('Invalid preferences');
   return { locale: input.locale };
 }
-export const windowBackground = '#120e17';
+export const windowBackground = '#2a3439';

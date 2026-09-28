@@ -4,7 +4,7 @@ A local research lab for learning and testing ETHUSDT perpetual futures strategi
 
 Xkiller trains a real, reproducible classifier on technical indicators, then simulates its decisions on a later section of history. It is a research application, not a proven profitable trading system. **No exchange credentials or real order submission are implemented.**
 
-![Xkiller compact dark cyberpunk workspace with imported Bybit data](docs/images/overview.png)
+![Xkiller compact dark Gunmetal workspace with imported Bybit data](docs/images/overview.png)
 
 ## Download
 
@@ -12,13 +12,13 @@ Download the Windows x64 portable executable from [GitHub Releases](https://gith
 
 ## Appearance
 
-Every screen uses a **compact, dark-only cyberpunk Glass Morphism interface**. Translucent panels blur a locally generated minimalist background of geometric glass planes and restrained neon edges. Shorter headers, tighter panel spacing, smaller artwork, and denser forms and tables put more research data on screen.
+Every screen uses a **compact, dark minimalist interface** with **Gunmetal (`#2A3439`) as its primary color**. Opaque panels, fine borders and clear typography organize research data. Quiet sage actions and subdued green/rose results provide useful emphasis. Blue accents, neon lighting, glass blur and decorative wallpaper are absent.
 
-The five-color palette has two primary colors (warm graphite and orchid purple), two supporting colors (fuchsia and emerald), and one action accent (lime). Blue, navy, and cyan are excluded from the interface palette. Graphics use a few large forms instead of detailed scenery, repeated circuitry, or decorative data.
+Short headers, restrained spacing, small controls and dense forms and tables keep the workspace compact. The model panel presents its status and research details directly. Visual identity comes from the generated minimal X icon and consistent layout; there is no large decorative illustration competing with the charts.
 
 Select a language in the top bar; it applies immediately and persists across restarts. A new profile starts in Russian. The app stays dark regardless of the OS or earlier light-theme settings, while preserving language and research data. See the [design system](docs/DESIGN.md) and [localization guide](docs/LOCALIZATION.md).
 
-Original generated Ethereum artwork illustrates the model panel. A generated purple/emerald crystalline X identifies the Windows executable, window, sidebar, and browser tab. All three assets are bundled locally. Decorative artwork is not market data. [Asset locations and generation prompts](docs/ASSETS.md) document the visual identity.
+A generated flat X monogram on Gunmetal identifies the Windows executable, window, sidebar and browser tab. Its sage and off-white geometry remains legible at small sizes and is bundled locally. [Asset locations and the generation prompt](docs/ASSETS.md) document the visual identity.
 
 ## What works
 
@@ -72,7 +72,7 @@ npm run build        # UI, Electron bridge, C# service
 npm run package      # Windows x64 portable application, including .NET runtime
 ```
 
-Output: `release/Xkiller-0.2.2-x64.exe`. This build is unsigned. `release/win-unpacked/Xkiller.exe` is the unpacked application. GitHub Actions performs checks and uploads the portable executable as a workflow artifact.
+Output: `release/Xkiller-0.2.3-x64.exe`. This build is unsigned. `release/win-unpacked/Xkiller.exe` is the unpacked application. GitHub Actions performs checks and uploads the portable executable as a workflow artifact.
 
 To publish a new version, update `package.json` and its lockfile, add English notes at `docs/releases/<version>.md`, verify locally, commit, and push a matching `v<version>` tag. The release workflow validates the version, runs all tests and type checks, packages Windows x64, computes SHA-256, and publishes both assets using the repository's built-in `GITHUB_TOKEN`. No personal access token is required. Actions must be enabled and permitted to write releases.
 

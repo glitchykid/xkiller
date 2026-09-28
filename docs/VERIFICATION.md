@@ -33,6 +33,16 @@ Four additional client checks cover legacy/malformed preference migration, persi
 
 ## UI and integration
 
+### Version 0.2.3 dark minimalist interface
+
+All 23 existing automated checks passed. The six client checks were rerun after removing the decorative illustration; Svelte/TypeScript reported zero errors and warnings. No research calculations changed.
+
+All six pages were exercised in all six languages at 1024 px (36 combinations). There was no page-level horizontal overflow, invalid form value, or unexpected Russian label in English/Korean/Japanese/Chinese content. Every screen used a dark Gunmetal canvas (`rgb(42, 52, 57)`) and no backdrop blur. The only image was the locally loaded application icon. The overview and compact simulation were visually inspected, and documentation screenshots were refreshed, including Japanese methodology, Ukrainian training and the Chinese data page at 760 px. No browser runtime errors were reported.
+
+Computed panel backgrounds were opaque `rgb(48, 57, 61)` and the wallpaper was absent. Main, muted, positive, negative and chart text colors measured at least 5.49:1 against this panel; primary button text measured 8.65:1 against its sage fill. This targeted color check is not a full accessibility audit.
+
+The actual Windows portable EXE opened from its temporary extraction directory, restored Russian, dataset 581E2C4999547CDB, model c9f1ce81 and four existing simulation runs. The new 256 px icon loaded from the packaged archive; the Gunmetal canvas and opaque panels matched the browser, with no wallpaper or blur. Switching to Japanese persisted a locale-only preference file and rendered the simulation page with the saved results. Renderer Node access remained unavailable; no runtime errors or alerts were reported. All seven generated icon sizes matched the embedded resources in both the application and portable EXEs byte-for-byte. An independent SHA-256 matched the generated checksum. The executable is unsigned.
+
 ### Version 0.2.2 compact dark cyberpunk interface
 
 All 23 automated checks passed; Svelte/TypeScript reported zero errors and warnings. Preference checks now verify that legacy light/dark fields are discarded while language survives, and that locale-only saves leave research data untouched.

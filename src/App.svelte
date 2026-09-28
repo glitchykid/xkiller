@@ -9,7 +9,6 @@
   import AppearanceControls from './lib/AppearanceControls.svelte';
   import type { State, RiskOptions, TrainingOptions } from './lib/types';
   import { version } from '../package.json';
-  import researchArtwork from './assets/eth-research-glass.png';
   type Page = 'overview' | 'training' | 'simulation' | 'journal' | 'data' | 'method';
   let page = $state<Page>('overview');
   let lab = $state<State | null>(null),
@@ -268,7 +267,7 @@
               {t('ETHEREUM RESEARCH LAB')} <span class="tiny-line"></span>
               {page === 'overview' ? t('MULTI-TIMEFRAME') : t('BYBIT PERPETUALS')}
             </div>
-            <h1>{titles[page]}<span class="title-dot">.</span></h1>
+            <h1>{titles[page]}</h1>
             <p>
               {page === 'overview'
                 ? t('От рыночных данных — к проверяемой стратегии.')
@@ -418,10 +417,6 @@
               <div class="panel-heading">
                 <h2><Icon name="bolt" size={18} /> {t('AI Insight')}</h2>
                 <span class="badge accent">{t('24 FEATURES')}</span>
-              </div>
-              <div class="intelligence-visual" aria-hidden="true">
-                <img src={researchArtwork} alt="" width="1536" height="1024" />
-                <div><span>{t('ETH / RESEARCH')}</span><span>15m · 1h · 4h</span></div>
               </div>
               <h3>{lab.model ? t('Модель готова к проверке') : t('Рынок — это данные.')}</h3>
               <p>

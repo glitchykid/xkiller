@@ -4,29 +4,24 @@
   font-synthesis: none;
   font-weight: 400;
   color-scheme: dark;
-  /* Five brand colors: two primary, two supporting, one action accent. */
-  --primary-graphite: #120e17;
-  --primary-orchid: #a84de4;
-  --support-fuchsia: #f46cba;
-  --support-emerald: #65edad;
-  --accent-lime: #d7ff4f;
-  --bg: var(--primary-graphite);
-  --panel: rgba(25, 18, 31, 0.64);
-  --chrome: rgba(19, 13, 24, 0.77);
-  --subtle: rgba(203, 155, 223, 0.08);
-  --field: rgba(16, 11, 22, 0.78);
-  --ink: #f3edf6;
-  --border: rgba(231, 195, 248, 0.19);
-  --line: rgba(223, 185, 238, 0.17);
-  --muted: #c6b4cf;
-  --accent: var(--accent-lime);
-  --accent-ink: #171b0b;
-  --accent-soft: rgba(215, 255, 79, 0.13);
-  --positive: var(--support-emerald);
-  --negative: var(--support-fuchsia);
-  --warning: var(--accent-lime);
-  --chart-line: #ce91f5;
-  --shadow: 0 8px 24px rgba(5, 2, 9, 0.3), inset 0 1px 0 rgba(247, 220, 255, 0.08);
+  --primary-gunmetal: #2a3439;
+  --bg: var(--primary-gunmetal);
+  --panel: #30393d;
+  --chrome: #252d30;
+  --subtle: rgba(232, 236, 233, 0.06);
+  --field: #232b2e;
+  --ink: #e8ece9;
+  --border: rgba(232, 236, 233, 0.13);
+  --line: rgba(232, 236, 233, 0.1);
+  --muted: #bec8c4;
+  --accent: #b7cbbb;
+  --accent-ink: #202a24;
+  --accent-soft: rgba(183, 203, 187, 0.1);
+  --positive: #a7c5b0;
+  --negative: #d2a6a8;
+  --warning: #d4c39b;
+  --chart-line: #c5d2c9;
+  --shadow: none;
   --mono: 'Cascadia Mono', Consolas, monospace;
   color: var(--ink);
   background: var(--bg);
@@ -112,16 +107,6 @@ svg {
   min-height: 100vh;
   isolation: isolate;
 }
-.app-shell::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, rgba(18, 14, 23, 0.18), rgba(18, 14, 23, 0.28)),
-    url('./assets/cyberpunk-glass.png') center / cover no-repeat;
-}
 .sidebar {
   width: 208px;
   position: fixed;
@@ -132,7 +117,6 @@ svg {
   display: flex;
   flex-direction: column;
   padding: 18px 12px 12px;
-  backdrop-filter: blur(18px) saturate(135%);
 }
 .brand {
   display: flex;
@@ -150,6 +134,7 @@ svg {
   flex-shrink: 0;
   display: block;
   object-fit: contain;
+  border-radius: 8px;
 }
 .brand-period {
   color: var(--muted);
@@ -191,12 +176,10 @@ nav button:hover,
   border-color: var(--border);
 }
 nav button.active {
-  background: linear-gradient(110deg, rgba(168, 77, 228, 0.34), rgba(244, 108, 186, 0.09));
+  background: var(--accent-soft);
   color: var(--ink);
-  border-color: rgba(206, 145, 245, 0.4);
-  box-shadow:
-    inset 3px 0 0 var(--accent),
-    var(--shadow);
+  border-color: var(--border);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 .sidebar-bottom {
   margin-top: auto;
@@ -259,7 +242,6 @@ nav button.active {
   padding: 10px 20px;
   gap: 16px;
   background: var(--chrome);
-  backdrop-filter: blur(18px) saturate(135%);
 }
 .breadcrumb {
   display: flex;
@@ -316,25 +298,15 @@ main {
   align-items: flex-end;
   justify-content: space-between;
   gap: 16px;
-  margin-bottom: 14px;
-  min-height: 112px;
-  padding: 16px 18px;
-  position: relative;
-  overflow: hidden;
-  border-radius: 16px;
-  background: linear-gradient(
-    100deg,
-    rgba(18, 14, 23, 0.86),
-    rgba(55, 23, 65, 0.52) 65%,
-    rgba(18, 14, 23, 0.16)
-  );
-  border: 1px solid var(--border);
+  margin-bottom: 18px;
+  min-height: 88px;
+  padding: 4px 0;
 }
 .eyebrow {
   display: flex;
   align-items: center;
   gap: 10px;
-  color: var(--support-emerald);
+  color: var(--positive);
   font: 9px var(--mono);
   letter-spacing: 1px;
 }
@@ -351,19 +323,6 @@ h1 {
   letter-spacing: -1px;
   text-transform: none;
   margin: 7px 0;
-}
-.title-dot {
-  display: inline-block;
-  background: var(--accent);
-  font-size: 0;
-  margin-left: 8px;
-  vertical-align: baseline;
-  border: 1px solid var(--line);
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  opacity: 1;
-  box-shadow: 0 0 12px rgba(215, 255, 79, 0.5);
 }
 .page-heading p {
   color: var(--muted);
@@ -389,13 +348,11 @@ h1 {
   font-size: 12px;
   font-weight: 650;
   line-height: 1.5;
-  backdrop-filter: blur(10px);
 }
 .primary {
   background: var(--accent);
   border-color: transparent;
   color: var(--accent-ink);
-  box-shadow: 0 0 18px rgba(215, 255, 79, 0.13);
 }
 .secondary {
   background: var(--panel);
@@ -405,7 +362,6 @@ h1 {
 .secondary:hover:enabled {
   box-shadow: var(--shadow);
   filter: brightness(1.06);
-  transform: translateY(-1px);
 }
 .secondary:hover:enabled {
   background: var(--subtle);
@@ -450,10 +406,9 @@ h1 {
   margin-bottom: 14px;
   border: 1px solid var(--line);
   border-left-width: 3px;
-  background: rgba(21, 15, 28, 0.69);
+  background: var(--chrome);
   font-size: 11px;
-  border-radius: 12px;
-  backdrop-filter: blur(14px);
+  border-radius: 8px;
 }
 .data-ribbon > div {
   display: flex;
@@ -575,7 +530,7 @@ h1 {
   gap: 10px;
   padding: 12px 14px;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(100deg, rgba(168, 77, 228, 0.09), transparent);
+  background: transparent;
 }
 .panel-heading h2 {
   display: flex;
@@ -599,7 +554,7 @@ h1 {
   background: var(--subtle);
   border: 1px solid var(--line);
   font-size: 23px;
-  border-radius: 12px;
+  border-radius: 8px;
 }
 .instrument h2 span {
   color: var(--muted);
@@ -707,36 +662,13 @@ h1 {
   padding-bottom: 14px;
   display: flex;
   flex-direction: column;
+  align-self: start;
 }
 .intelligence .panel-heading {
   padding: 12px 14px;
 }
-.intelligence-visual {
-  margin: 8px 14px 10px;
-  border-radius: 12px;
-  overflow: hidden;
-  background: radial-gradient(ellipse at center, rgba(168, 77, 228, 0.14), transparent 75%);
-}
-.intelligence-visual > img {
-  display: block;
-  width: 100%;
-  height: 112px;
-  aspect-ratio: 3 / 2;
-  object-fit: contain;
-}
-.intelligence-visual > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 6px 8px;
-  border-top: 1px solid var(--line);
-  background: var(--subtle);
-  color: var(--support-emerald);
-  font: bold 9px var(--mono);
-}
 .intelligence > h3 {
-  margin: 0 14px 6px;
+  margin: 18px 14px 8px;
   font-size: 15px;
 }
 .intelligence > p {
@@ -747,7 +679,7 @@ h1 {
 }
 .insight-rows {
   padding: 8px 14px 10px;
-  margin-top: auto;
+  margin-top: 12px;
 }
 .insight-rows > div {
   display: flex;
@@ -886,8 +818,7 @@ h1 {
   border: 1px solid var(--line);
   margin-top: 14px;
   padding: 12px 14px;
-  background: rgba(23, 16, 30, 0.66);
-  backdrop-filter: blur(16px);
+  background: var(--panel);
 }
 .step-number {
   display: grid;
@@ -1486,17 +1417,16 @@ progress::-webkit-progress-value {
   padding: 17px 22px;
   font-weight: 700;
   max-width: calc(100vw - 40px);
-  border-radius: 14px;
+  border-radius: 10px;
 }
 
-/* Frosted surfaces share one compact dark cyberpunk palette. */
+/* Opaque, quiet surfaces share the Gunmetal base. */
 .panel,
 .stat,
 .frame-card {
   border: 1px solid var(--border);
-  border-radius: 16px;
+  border-radius: 10px;
   box-shadow: var(--shadow);
-  backdrop-filter: blur(20px);
 }
 .panel {
   overflow: hidden;
@@ -1506,12 +1436,12 @@ progress::-webkit-progress-value {
 .demo-box,
 .job-bar,
 .alert {
-  border-radius: 14px;
+  border-radius: 10px;
 }
 .step-number,
 .method-number,
 .empty-icon {
-  border-radius: 12px;
+  border-radius: 8px;
 }
 .segmented {
   border-radius: 10px;
@@ -1592,62 +1522,23 @@ select option {
   }
 }
 
-.page-heading::before {
-  content: '';
-  position: absolute;
-  inset: 0 0 auto;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    var(--primary-orchid),
-    var(--support-fuchsia),
-    var(--support-emerald),
-    var(--accent-lime)
-  );
-}
-.stats-grid > .stat:nth-child(1) {
-  --card-color: var(--support-emerald);
-}
-.stats-grid > .stat:nth-child(2) {
-  --card-color: var(--primary-orchid);
-}
-.stats-grid > .stat:nth-child(3) {
-  --card-color: var(--support-fuchsia);
-}
-.stats-grid > .stat:nth-child(4) {
-  --card-color: var(--accent-lime);
-}
-.stats-grid > .stat {
-  border-top-color: color-mix(in srgb, var(--card-color) 65%, transparent);
-  background:
-    linear-gradient(
-      125deg,
-      color-mix(in srgb, var(--card-color) 11%, transparent),
-      transparent 65%
-    ),
-    var(--panel);
-}
-.stat-label > svg,
-.eth-symbol {
-  color: var(--card-color);
-}
 .accent-text {
-  color: var(--accent-lime);
+  color: var(--accent);
   text-decoration: none;
 }
 .frame-name strong {
-  color: var(--support-emerald);
+  color: var(--positive);
 }
 .count,
 .mini-tag {
   border-radius: 5px;
 }
 .coin {
-  color: var(--primary-orchid);
-  background: rgba(168, 77, 228, 0.13);
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 .language-picker select {
-  background: rgba(18, 14, 23, 0.6);
+  background: var(--field);
 }
 @media (min-width: 1700px) {
   .market-grid {
@@ -1803,27 +1694,11 @@ select option {
   .simulation-grid {
     grid-template-columns: minmax(0, 1fr);
   }
-  .intelligence {
-    display: grid;
-    grid-template-columns: 220px 1fr;
-    column-gap: 10px;
-  }
-  .intelligence .panel-heading {
-    grid-column: 1 / -1;
-  }
-  .intelligence-visual {
-    grid-row: 2 / 5;
-    align-self: start;
-    margin-top: 22px;
-  }
   .intelligence > h3 {
     margin-top: 20px;
   }
   .intelligence > p {
     margin-bottom: 8px;
-  }
-  .intelligence > .wide {
-    grid-column: 2;
   }
   .insight-rows {
     padding-top: 0;
@@ -1967,15 +1842,6 @@ select option {
   .chart-footer {
     padding: 12px;
     font-size: 9px;
-  }
-  .intelligence {
-    display: flex;
-  }
-  .intelligence-visual {
-    align-self: stretch;
-  }
-  .intelligence > h3 {
-    margin-top: 0;
   }
   .frames-grid {
     grid-template-columns: 1fr;
