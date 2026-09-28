@@ -27,7 +27,9 @@ Verified locally on Windows x64 on 2026-09-28. This record describes functional 
   - Cash, ledger PnL, equity, and costs reconcile.
 - One client regression test verifies that nested reactive form proxies are serialized into cloneable plain data before crossing the Electron bridge. This catches a desktop-only defect that does not occur in the browser HTTP path.
 
-Run `npm run test` for all 18 checks. These are meaningful invariants and one demonstrated integration regression; no claim of exhaustive correctness is made.
+- A second client regression check verifies that filesystem aliases resolve to the same trusted packaged document, while other archives, other documents, remote URLs, and modified URLs are rejected. This addresses Windows portable extraction paths without weakening sender checks.
+
+Run `npm run test` for all 19 checks. These are meaningful invariants and demonstrated integration regressions; no claim of exhaustive correctness is made.
 
 ## UI and integration
 

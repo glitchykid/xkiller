@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { writeFile } from 'node:fs/promises';
+import { isTrustedDocument } from './trust';
 
 let backend: ChildProcess | undefined;
 let backendUrl = '';
@@ -24,7 +25,7 @@ function trusted(event: Electron.IpcMainInvokeEvent) {
   if (
     !event.senderFrame ||
     event.senderFrame !== event.sender.mainFrame ||
-    event.senderFrame.url.replace(/\/$/, '') !== expectedUrl.replace(/\/$/, '')
+    !isTrustedDocument(event.senderFrame.url, expectedUrl)
   )
     throw new Error('Untrusted sender');
 }
@@ -129,7 +130,7 @@ else
       });
       win.webContents.setWindowOpenHandler(() => ({ action: 'deny' }));
       win.webContents.on('will-navigate', (event, url) => {
-        if (url !== expectedUrl && url !== expectedUrl + '/') event.preventDefault();
+        if (!isTrustedDocument(url, expectedUrl)) event.preventDefault();
       });
       if (devUrl) await win.loadURL(devUrl);
       else await win.loadFile(indexPath);

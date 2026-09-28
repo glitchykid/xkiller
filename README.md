@@ -51,7 +51,7 @@ Loading a new dataset resets the current model and its simulations. Retraining r
 
 ```powershell
 npm run check        # Svelte + TypeScript diagnostics
-npm run test         # 17 C# checks + Electron transport regression check
+npm run test         # 17 C# checks + 2 Electron integration regression checks
 npm run build        # UI, Electron bridge, C# service
 npm run package      # Windows x64 portable application, including .NET runtime
 ```
